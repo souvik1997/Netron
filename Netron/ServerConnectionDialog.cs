@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace Netron
 {
-    public partial class Form1 : Form
+    public partial class ServerConnectionDialog : Form
     {
-        public Form1()
+        public ServerConnectionDialog()
         {
             InitializeComponent();
         }
