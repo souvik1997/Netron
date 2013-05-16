@@ -22,7 +22,7 @@ namespace Netron
         {
             InitializeComponent();
         }
-
+        
         private void button1_Click(object sender, EventArgs e)
         {
             server = new Server(1337, new List<char> { (char)0xFF });

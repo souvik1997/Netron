@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
+﻿using System.Drawing;
 namespace Netron
 {
-    interface Drawable
+    interface IDrawable
     {
-        public void Draw(Graphics g);
-        public void Erase(Graphics g);
+        void Draw(Graphics g);
+        void Erase(Graphics g);
     }
 }
