@@ -7,14 +7,19 @@ namespace Netron
     {
         Bullet, Player, Wall
     }
-    public abstract class TronBase : IDrawable
+    public abstract class TronBase 
     {
         public enum DirectionType
         {
             North = 45*0, Northeast = 45*1, East = 45*2, Southeast = 45*3, South = 45*4, Southwest = 45*5, West = 45*6, Northwest = 45*7
         }
         public abstract TronType GetTronType();
-        
+        public Bitmap Image
+        {
+            get;
+            set;
+        }
+
         public virtual string Serialize()
         {
             StringBuilder sb = new StringBuilder();
@@ -42,27 +47,19 @@ namespace Netron
             get;
             set;
         }
-        public uint XPos
+        public int XPos
         {
             get;
             set;
         }
-        public uint YPos
+        public int YPos
         {
             get;
             set;
-        }
-        public uint DrawableWidth
-        {
-            get; set;
-        }
-        public uint DrawableHeight
-        {
-            get; set;
         }
         public DirectionType Direction { get; set; }
 
-        public void PutSelfInGrid(Grid gr, uint x, uint y)
+        public void PutSelfInGrid(Grid gr, int x, int y)
         {
             Grid = gr;
             gr.Set(this, x, y);
@@ -75,16 +72,16 @@ namespace Netron
             Grid.Remove(XPos, YPos);
             IsInGrid = false;
         }
-        public void MoveTo(uint newx, uint newy)
+        public void MoveTo(int newx, int newy)
         {
             Grid.Move(XPos, YPos, newx, newy);
             XPos = newx;
             YPos = newy;
         }
-        public uint[] GetAdjacentLocation(DirectionType dt, uint howMuchToMove)
+        public int[] GetAdjacentLocation(DirectionType dt, int howMuchToMove)
         {
-            uint proposedx = XPos;
-            uint proposedy = YPos;
+            int proposedx = XPos;
+            int proposedy = YPos;
             if (dt == DirectionType.North && proposedy > howMuchToMove-1)
             {
                 proposedy -= howMuchToMove;
@@ -124,20 +121,8 @@ namespace Netron
             return new[] {proposedx, proposedy};
 
         }
-        private float fix(uint oldVal, uint oldMax, uint oldMin, uint newMax, uint newMin)
-        {
-            return (((oldVal - oldMin) * (float)(newMax - newMin)) / (oldMax - oldMin)) + newMin;
-
-        }
-        public float[] GetEquivalentLocation()
-        {
-            return new[] { fix(XPos, Grid.Width, 0, DrawableWidth, 0), fix(YPos, Grid.Height, 0, DrawableHeight, 0) };
-        }
+        
         public abstract void Act();
-
-        public abstract void Draw(System.Drawing.Graphics g);
-
-        public abstract void Erase(System.Drawing.Graphics g);
     }
     
 }

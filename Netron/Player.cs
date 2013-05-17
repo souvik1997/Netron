@@ -27,11 +27,6 @@ namespace Netron
         {
             IPClient = c;
         }
-        public override void Draw(Graphics g)
-        {
-            float[] coords = GetEquivalentLocation();
-            g.DrawEllipse(new Pen(Color), coords[0], coords[1], coords[0] + 3, coords[1] + 3);
-        }
 
         public override void Erase(Graphics g)
         {
@@ -48,8 +43,8 @@ namespace Netron
             var strs = str.Split(',');
             Player p = new Player(strs[4].Equals("") ? null :new TcpClient(strs[4], 1337))
                            {
-                               XPos = UInt32.Parse(strs[0]),
-                               YPos = UInt32.Parse(strs[1]),
+                               XPos = Int32.Parse(strs[0]),
+                               YPos = Int32.Parse(strs[1]),
                                Direction = (DirectionType) Int32.Parse(strs[2]),
                                Color = Color.FromArgb(Int32.Parse(strs[3])),
                            };
@@ -62,8 +57,8 @@ namespace Netron
         }
         public override void Act()
         {
-            uint oldx = XPos;
-            uint oldy = YPos;
+            int oldx = XPos;
+            int oldy = YPos;
             var coords = GetAdjacentLocation(Direction, 1);
             if (Grid.IsValidLocation(coords[0], coords[1]))
             {

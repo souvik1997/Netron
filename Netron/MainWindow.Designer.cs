@@ -46,6 +46,7 @@
             this.gameWindow.Size = new System.Drawing.Size(616, 383);
             this.gameWindow.TabIndex = 0;
             this.gameWindow.TabStop = false;
+            this.gameWindow.Click += new System.EventHandler(this.gameWindow_Click);
             // 
             // button1
             // 
@@ -74,27 +75,27 @@
             this.connectToServerToolStripMenuItem,
             this.setUpServerToolStripMenuItem});
             this.connectToolStripMenuItem.Name = "connectToolStripMenuItem";
-            this.connectToolStripMenuItem.Size = new System.Drawing.Size(128, 20);
+            this.connectToolStripMenuItem.Size = new System.Drawing.Size(115, 20);
             this.connectToolStripMenuItem.Text = "Connect/Disconnect";
             // 
             // connectToServerToolStripMenuItem
             // 
             this.connectToServerToolStripMenuItem.Name = "connectToServerToolStripMenuItem";
-            this.connectToServerToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.connectToServerToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.connectToServerToolStripMenuItem.Text = "Connect to server";
             this.connectToServerToolStripMenuItem.Click += new System.EventHandler(this.connectToServerToolStripMenuItem_Click);
             // 
             // setUpServerToolStripMenuItem
             // 
             this.setUpServerToolStripMenuItem.Name = "setUpServerToolStripMenuItem";
-            this.setUpServerToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.setUpServerToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
             this.setUpServerToolStripMenuItem.Text = "Set up server";
             this.setUpServerToolStripMenuItem.Click += new System.EventHandler(this.setUpServerToolStripMenuItem_Click);
             // 
             // logToolStripMenuItem
             // 
             this.logToolStripMenuItem.Name = "logToolStripMenuItem";
-            this.logToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.logToolStripMenuItem.Size = new System.Drawing.Size(56, 20);
             this.logToolStripMenuItem.Text = "Options";
             // 
             // MainWindow
@@ -108,6 +109,8 @@
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.Text = "Netron";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.keyDown);
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.keyUp);
             ((System.ComponentModel.ISupportInitialize)(this.gameWindow)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();

@@ -10,11 +10,6 @@ namespace Netron
         {
             return TronType.Wall;
         }
-        public override void Draw(Graphics g)
-        {
-            float[] coords = GetEquivalentLocation();
-            g.DrawRectangle(new Pen(Color), coords[0], coords[1], coords[0] + 1, coords[1] + 1);
-        }
 
         public override void Erase(Graphics g)
         {
@@ -26,9 +21,9 @@ namespace Netron
             var strs = str.Split(',');
             Wall wl = new Wall
                           {
-                              XPos = UInt32.Parse(strs[0]),
-                              YPos = UInt32.Parse(strs[1]),
-                              Direction = (DirectionType) UInt32.Parse(strs[2]),
+                              XPos = Int32.Parse(strs[0]),
+                              YPos = Int32.Parse(strs[1]),
+                              Direction = (DirectionType) Int32.Parse(strs[2]),
                               Color = Color.FromArgb(Int32.Parse(strs[3]))
                           };
             return wl;

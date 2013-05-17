@@ -4,62 +4,59 @@ namespace Netron
 {
     public class Grid
     {
-        private readonly TronBase[,] _grid;
-        public uint Width
+        public TronBase[,] Map
         {
-            get { return (uint)_grid.GetLength(0); }
+            get;
+            private set;
         }
-        public uint Height
+        public int Width
         {
-            get { return (uint)_grid.GetLength(1); }
+            get { return (int)Map.GetLength(0); }
         }
-        public Grid(uint width, uint height)
+        public int Height
         {
-            _grid = new TronBase[height,width];
+            get { return (int)Map.GetLength(1); }
         }
-        public void Set(TronBase tb, uint x, uint y)
+        public Grid(int width, int height)
+        {
+            Map = new TronBase[height,width];
+        }
+        public void Set(TronBase tb, int x, int y)
         {
             if (Get(x, y) != null)
                 Get(x, y).IsInGrid = false;
-            _grid[y, x] = tb;
+            Map[y, x] = tb;
         }
-        public TronBase Remove(uint x, uint y)
+        public TronBase Remove(int x, int y)
         {
             TronBase tb = Get(x, y);
             Set(null, x, y);
             return tb;
         }
-        public void Move(uint x, uint y, uint newx, uint newy)
+        public void Move(int x, int y, int newx, int newy)
         {
             Set(Remove(x, y), newx, newy);
         }
-        public void Move(TronBase tb, uint newx, uint newy)
+        public void Move(TronBase tb, int newx, int newy)
         {
             Set(Remove(tb.XPos, tb.YPos), newx, newy);
         }
-        public TronBase Get(uint x, uint y)
+        public TronBase Get(int x, int y)
         {
-            return _grid[y, x];
-        }
-        public void DrawAll(Graphics g)
-        {
-            foreach(TronBase tb in _grid)
-            {
-                tb.Draw(g);
-            }
+            return Map[y, x];
         }
         public void ActAll()
         {
-            foreach (TronBase tb in _grid)
+            foreach (TronBase tb in Map)
             {
                 tb.Act();
             }
         }
-        public bool IsValidLocation(uint x, uint y)
+        public bool IsValidLocation(int x, int y)
         {
-            return (x < _grid.GetLength(0)) && (y < _grid.GetLength(1));
+            return (x >= 0) && (y >= 0) && (x < Map.GetLength(0)) && (y < Map.GetLength(1));
         }
-        public void Exec(TronInstruction ti, uint x, uint y, TronBase tb)
+        public void Exec(TronInstruction ti, int x, int y, TronBase tb)
         {
             if (ti == TronInstruction.AddToGrid)
             {
