@@ -13,7 +13,7 @@ namespace Netron
             get;
             set;
         }
-        public new TronType GetTronType()
+        public override TronType GetTronType()
         {
             return TronType.Player;
         }
@@ -27,23 +27,23 @@ namespace Netron
         {
             IPClient = c;
         }
-        public new void Draw(Graphics g)
+        public override void Draw(Graphics g)
         {
             float[] coords = GetEquivalentLocation();
             g.DrawEllipse(new Pen(Color), coords[0], coords[1], coords[0] + 3, coords[1] + 3);
         }
 
-        public new void Erase(Graphics g)
+        public override void Erase(Graphics g)
         {
             throw new NotImplementedException();
         }
-        public new string Serialize()
+        public override string Serialize()
         {
             StringBuilder sb = new StringBuilder(base.Serialize()+",");
             sb.Append(IPClient == null ? "" :GetIPAddress(IPClient));
             return sb.ToString();
         }
-        public new static Player Deserialize(string str)
+        public static Player Deserialize(string str)
         {
             var strs = str.Split(',');
             Player p = new Player(strs[4].Equals("") ? null :new TcpClient(strs[4], 1337))
@@ -60,22 +60,25 @@ namespace Netron
             Direction = toTurn;
             MainWindow.Comm.Send(this, TronInstruction.DoNothing, XPos, YPos);
         }
-        public new void Act()
+        public override void Act()
         {
             uint oldx = XPos;
             uint oldy = YPos;
             var coords = GetAdjacentLocation(Direction, 1);
             if (Grid.IsValidLocation(coords[0], coords[1]))
+            {
                 MoveTo(coords[0], coords[1]);
+                Wall wl = new Wall();
+                wl.PutSelfInGrid(Grid, oldx, oldy);
+            }
             else
             {
-                int dir = (int) Direction;
+                int dir = (int)Direction;
                 dir += 90;
                 dir %= 360;
                 Direction = (DirectionType)dir;
             }
-            Wall wl = new Wall();
-            wl.PutSelfInGrid(Grid, oldx, oldy);
+            
         }
     }
 }

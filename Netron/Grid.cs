@@ -19,6 +19,8 @@ namespace Netron
         }
         public void Set(TronBase tb, uint x, uint y)
         {
+            if (Get(x, y) != null)
+                Get(x, y).IsInGrid = false;
             _grid[y, x] = tb;
         }
         public TronBase Remove(uint x, uint y)

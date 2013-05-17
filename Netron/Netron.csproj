@@ -54,9 +54,7 @@
   <ItemGroup>
     <Compile Include="Communicator.cs" />
     <Compile Include="Drawable.cs" />
-    <Compile Include="FiniteLifetimeable.cs" />
     <Compile Include="Grid.cs" />
-    <Compile Include="Interactable.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

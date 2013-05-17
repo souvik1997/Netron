@@ -37,6 +37,16 @@ namespace UnitTests
             player.Act();
             Assert.IsTrue(gr.Get(2,3).GetTronType() == TronType.Wall);
         }
-        
+        [TestMethod]
+        public void TestPlayerTurning()
+        {
+            var gr = new Netron.Grid(3, 3);
+            var player = new Netron.Player();
+            player.PutSelfInGrid(gr, 2, 2);
+            player.Direction = TronBase.DirectionType.East;
+            player.Act();
+            Assert.IsTrue(player.Direction == TronBase.DirectionType.South);
+        }
+
     }
 }

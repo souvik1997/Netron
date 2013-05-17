@@ -13,9 +13,9 @@ namespace Netron
         {
             North = 45*0, Northeast = 45*1, East = 45*2, Southeast = 45*3, South = 45*4, Southwest = 45*5, West = 45*6, Northwest = 45*7
         }
-        public extern TronType GetTronType();
-        public extern int GetState();
-        public string Serialize()
+        public abstract TronType GetTronType();
+        
+        public virtual string Serialize()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(XPos);
@@ -27,7 +27,6 @@ namespace Netron
             sb.Append(Color.ToArgb());
             return sb.ToString();
         }
-        public extern static TronBase Deserialize(string str);
         public Color Color
         {
             get;
@@ -41,7 +40,7 @@ namespace Netron
         public bool IsInGrid
         {
             get;
-            private set;
+            set;
         }
         public uint XPos
         {
@@ -134,11 +133,11 @@ namespace Netron
         {
             return new[] { fix(XPos, Grid.Width, 0, DrawableWidth, 0), fix(YPos, Grid.Height, 0, DrawableHeight, 0) };
         }
-        public extern void Act();
+        public abstract void Act();
 
-        public extern void Draw(System.Drawing.Graphics g);
+        public abstract void Draw(System.Drawing.Graphics g);
 
-        public extern void Erase(System.Drawing.Graphics g);
+        public abstract void Erase(System.Drawing.Graphics g);
     }
     
 }

@@ -6,22 +6,22 @@ namespace Netron
     public class Wall : TronBase
     {
 
-        public new TronType GetTronType()
+        public override TronType GetTronType()
         {
             return TronType.Wall;
         }
-        public new void Draw(Graphics g)
+        public override void Draw(Graphics g)
         {
             float[] coords = GetEquivalentLocation();
             g.DrawRectangle(new Pen(Color), coords[0], coords[1], coords[0] + 1, coords[1] + 1);
         }
 
-        public new void Erase(Graphics g)
+        public override void Erase(Graphics g)
         {
             throw new NotImplementedException();
         }
         
-        public new static Wall Deserialize(string str)
+        public static Wall Deserialize(string str)
         {
             var strs = str.Split(',');
             Wall wl = new Wall
@@ -33,7 +33,7 @@ namespace Netron
                           };
             return wl;
         }
-        public new void Act()
+        public override void Act()
         {
 
         }
