@@ -8,7 +8,7 @@ namespace Netron
 {
     public class Player : TronBase
     {
-        public TcpClient IPClient
+        public int PlayerNum
         {
             get;
             set;
@@ -17,31 +17,24 @@ namespace Netron
         {
             return TronType.Player;
         }
-        private string GetIPAddress(TcpClient tc)
-        {
-            var ipe = (IPEndPoint)tc.Client.RemoteEndPoint;
-            return ipe.Address.ToString();
-        }
         
-        public Player(TcpClient c = null)
+        public Player(int num)
         {
-            IPClient = c;
+            PlayerNum = num;
         }
 
-        public override void Erase(Graphics g)
-        {
-            throw new NotImplementedException();
-        }
+        
         public override string Serialize()
         {
             StringBuilder sb = new StringBuilder(base.Serialize()+",");
-            sb.Append(IPClient == null ? "" :GetIPAddress(IPClient));
+            sb.Append(PlayerNum);
             return sb.ToString();
         }
         public static Player Deserialize(string str)
         {
+            Console.WriteLine(str);
             var strs = str.Split(',');
-            Player p = new Player(strs[4].Equals("") ? null :new TcpClient(strs[4], 1337))
+            Player p = new Player(Int32.Parse(strs[4]))
                            {
                                XPos = Int32.Parse(strs[0]),
                                YPos = Int32.Parse(strs[1]),
@@ -53,7 +46,13 @@ namespace Netron
         public void AcceptUserInput(DirectionType toTurn)
         {
             Direction = toTurn;
-            MainWindow.Comm.Send(this, TronInstruction.DoNothing, XPos, YPos);
+            MainWindow.Comm.Send(MainWindow.Comm.GeneratePacket(this, TronInstruction.DoNothing, XPos, YPos));
+        }
+        public override bool Equals(object obj)
+        {
+            Player p = obj as Player;
+            if (p == null) return false;
+            return base.Equals(p) && p.PlayerNum == PlayerNum;
         }
         public override void Act()
         {

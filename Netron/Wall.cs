@@ -11,10 +11,6 @@ namespace Netron
             return TronType.Wall;
         }
 
-        public override void Erase(Graphics g)
-        {
-            throw new NotImplementedException();
-        }
         
         public static Wall Deserialize(string str)
         {

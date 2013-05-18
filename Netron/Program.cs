@@ -35,7 +35,7 @@ namespace Netron
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new NetBenchmark());
+            Application.Run(new MainWindow());
         }
     }
 }

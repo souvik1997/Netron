@@ -121,7 +121,13 @@ namespace Netron
             return new[] {proposedx, proposedy};
 
         }
-        
+        public override bool Equals(object obj)
+        {
+            TronBase tb = obj as TronBase;
+            if (tb == null) return false;
+            return tb.XPos == XPos && tb.YPos == YPos && tb.Color.ToArgb() == Color.ToArgb() &&
+                   tb.Direction == Direction;
+        }
         public abstract void Act();
     }
     

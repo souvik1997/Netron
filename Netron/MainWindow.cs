@@ -12,15 +12,16 @@ namespace Netron
     public partial class MainWindow : Form
     {
         public static Communicator Comm;
-        private Grid gr;
+        private static Grid gr;
         private BackgroundWorker bw;
-        private Player player;
+        public static Player player;
         public MainWindow()
         {
             InitializeComponent();
             gr = new Grid(32, 32);
+            bw = new BackgroundWorker();
             bw.DoWork += new DoWorkEventHandler(bw_DoWork);
-            player = new Player(new TcpClient("127.0.0.1",1337));
+            player = new Player(0);
         }
         void Initialize()
         {
@@ -30,11 +31,11 @@ namespace Netron
                 int x = 0;
                 foreach (Player p in Comm.Players)
                 {
-                    Comm.Send(p, TronInstruction.MoveEntity, x, 1);
+                    Comm.Send(Comm.GeneratePacket(p, TronInstruction.MoveEntity, x, 1));
                     x += gap;
                 }
             }
-            Comm.Send(player, TronInstruction.DoNothing, player.XPos, player.YPos);
+            Comm.Send(Comm.GeneratePacket(player, TronInstruction.DoNothing, player.XPos, player.YPos));
         }
         void bw_DoWork(object sender, DoWorkEventArgs e)
         {
