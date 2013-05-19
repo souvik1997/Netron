@@ -119,6 +119,24 @@
   <ItemGroup>
     <None Include="Resources\Wall.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WallBL.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WallBR.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WallEW.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WallNS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WallUL.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\WallUR.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

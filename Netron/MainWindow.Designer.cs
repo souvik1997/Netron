@@ -46,7 +46,7 @@
             // 
             this.gameWindow.Location = new System.Drawing.Point(252, 27);
             this.gameWindow.Name = "gameWindow";
-            this.gameWindow.Size = new System.Drawing.Size(616, 383);
+            this.gameWindow.Size = new System.Drawing.Size(616, 370);
             this.gameWindow.TabIndex = 0;
             this.gameWindow.TabStop = false;
             this.gameWindow.Click += new System.EventHandler(this.gameWindow_Click);

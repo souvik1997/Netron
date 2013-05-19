@@ -17,11 +17,15 @@ namespace Netron
         {
             return TronType.Player;
         }
-        
+
+        private readonly Bitmap _oimage;
+        public override sealed Bitmap Image { get; set; }
+
         public Player(int num)
         {
             PlayerNum = num;
-            Image = Properties.Resources.TronLightcycleFinal;
+            _oimage = Properties.Resources.TronLightcycleFinal;
+            Image = _oimage;
         }
 
         
@@ -31,6 +35,18 @@ namespace Netron
             sb.Append(PlayerNum);
             return sb.ToString();
         }
+
+        private Color _color;
+        public override Color Color
+        {
+            get { return _color; }
+            set
+            {
+                _color = value;
+                Image = TintBitmap(_oimage, value);
+            }
+        }
+
         public static Player Deserialize(string str)
         {
             
@@ -55,27 +71,56 @@ namespace Netron
             if (p == null) return false;
             return base.Equals(p) && p.PlayerNum == PlayerNum;
         }
+        private bool MoveForwardIfAbleTo()
+        {
+            var coords = GetAdjacentLocation(Direction, 1);
+            if (Grid.IsValidLocation(coords[0], coords[1]) && Grid.Get(coords[0], coords[1]) == null)
+            {
+                MoveTo(coords[0], coords[1]);
+                return true;
+            }
+            return false;
+        }
         public override void Act()
         {
             int oldx = XPos;
             int oldy = YPos;
-            var coords = GetAdjacentLocation(Direction, 1);
-            if (Grid.IsValidLocation(coords[0], coords[1]))
+            if (MoveForwardIfAbleTo())
             {
-                MoveTo(coords[0], coords[1]);
-                Wall wl = new Wall();
-                wl.Direction = Direction;
-                wl.Color = Color;
+                Wall wl = new Wall {Direction = Direction, Color = Color};
                 wl.PutSelfInGrid(Grid, oldx, oldy);
             }
             else
             {
                 int dir = (int)Direction;
-                dir += 90;
+                dir += (new Random()).Next(2) == 1 ? 90: -90;
                 dir %= 360;
-                Direction = (DirectionType)dir;
+                Turn((DirectionType)dir);
             }
             
+        }
+        private void Turn(DirectionType newDir)
+        {
+
+            DirectionType olddir = Direction;
+            Direction = newDir;
+            if (!Grid.IsValidLocation(GetAdjacentLocation(newDir,1)) || Grid.Get(GetAdjacentLocation(newDir, 1)) != null) return;
+            
+            int oldx = XPos;
+            int oldy = YPos;
+            
+            MoveForwardIfAbleTo();
+            
+            if ((olddir == DirectionType.North && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.South))
+                (new Wall {Direction = DirectionType.Northwest, Color = Color}).PutSelfInGrid(Grid, oldx, oldy);
+            if ((olddir == DirectionType.North && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.South))
+                (new Wall { Direction = DirectionType.Northeast, Color = Color }).PutSelfInGrid(Grid, oldx, oldy);
+            if ((olddir == DirectionType.South && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.North))
+                (new Wall { Direction = DirectionType.Southwest, Color = Color }).PutSelfInGrid(Grid, oldx, oldy);
+            if ((olddir == DirectionType.South && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.North))
+                (new Wall { Direction = DirectionType.Southeast, Color = Color }).PutSelfInGrid(Grid, oldx, oldy);
+            
+
         }
     }
 }

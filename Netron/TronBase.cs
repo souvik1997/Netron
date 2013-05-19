@@ -17,16 +17,10 @@ namespace Netron
             North = 45*0, Northeast = 45*1, East = 45*2, Southeast = 45*3, South = 45*4, Southwest = 45*5, West = 45*6, Northwest = 45*7
         }
         public abstract TronType GetTronType();
-        private Bitmap _image;
-        public Bitmap Image
+        public abstract Bitmap Image
         {
-            get { return _image; }
-            set 
-            { 
-                _image = value;
-                if (_image != null)
-                    _image = TintBitmap(Image, Color);
-            }
+            get;
+            set;
         }
 
         public virtual string Serialize()
@@ -42,19 +36,9 @@ namespace Netron
             return sb.ToString();
         }
 
-        private Color _color;
-        public Color Color
-        {
-            get { return _color; }
-            set 
-            { 
-                _color = value;
-                if (Image != null)
-                    Image = TintBitmap(Image, _color);
-            }
-        }
+        public abstract Color Color { get; set; }
         /* TODO: Test this code! http://bytes.com/topic/net/answers/796819-c-app-tint-color */
-        private static Bitmap TintBitmap(Bitmap b, Color tintColor)
+        protected static Bitmap TintBitmap(Bitmap b, Color tintColor)
         {
             Bitmap b2 = new Bitmap(b.Width, b.Height);
             for (int x = 0; x < b.Width; x++)
@@ -63,9 +47,12 @@ namespace Netron
                 {
                     
                     Color src = b.GetPixel(x, y);
+                    int t = src.R + src.B + src.G;
+                    Color newColor = Color.FromArgb(src.A, (src.R + tintColor.R)/2, (src.G + tintColor.G)/2,
+                                                    (src.B + tintColor.B)/2);
+
                     b2.SetPixel(x, y,
-                                Color.FromArgb(src.A, (src.R + tintColor.R*2)/3, (src.B + tintColor.B*2)/3,
-                                               (src.G + tintColor.G*2)/3));
+                                newColor);
                 }
             }
             return b2;

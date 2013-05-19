@@ -73,9 +73,59 @@ namespace Netron.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Wall {
+        internal static System.Drawing.Bitmap WallBL {
             get {
-                object obj = ResourceManager.GetObject("Wall", resourceCulture);
+                object obj = ResourceManager.GetObject("WallBL", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WallBR {
+            get {
+                object obj = ResourceManager.GetObject("WallBR", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WallEW {
+            get {
+                object obj = ResourceManager.GetObject("WallEW", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WallNS {
+            get {
+                object obj = ResourceManager.GetObject("WallNS", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WallUL {
+            get {
+                object obj = ResourceManager.GetObject("WallUL", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap WallUR {
+            get {
+                object obj = ResourceManager.GetObject("WallUR", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
