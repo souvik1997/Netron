@@ -1,33 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Net.Sockets;
+
 namespace Netron
 {
     public partial class MainWindow : Form
     {
         public static Communicator Comm;
-        private static Grid gr;
-        private BackgroundWorker bw;
-        public static Player player;
+        private static Grid _gr;
+        private readonly BackgroundWorker _bw;
+        public static Player MePlayer;
         public MainWindow()
         {
             InitializeComponent();
-            gr = new Grid(32, 32);
-            bw = new BackgroundWorker();
-            bw.DoWork += new DoWorkEventHandler(bw_DoWork);
-            player = new Player(0);
+            _gr = new Grid(20, 20);
+            _bw = new BackgroundWorker();
+            _bw.DoWork += bw_DoWork;
+            MePlayer = new Player(0);
+            MePlayer.Color = Color.Fuchsia;
+            MePlayer.PutSelfInGrid(_gr, 2, 3);
         }
         void Initialize()
         {
             if (Comm.Tcs == TronCommunicatorStatus.Master)
             {
-                int gap = gr.Width/Comm.Players.Count;
+                int gap = _gr.Width/Comm.Players.Count;
                 int x = 0;
                 foreach (Player p in Comm.Players)
                 {
@@ -35,7 +33,7 @@ namespace Netron
                     x += gap;
                 }
             }
-            Comm.Send(Comm.GeneratePacket(player, TronInstruction.DoNothing, player.XPos, player.YPos));
+            Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.DoNothing, MePlayer.XPos, MePlayer.YPos));
         }
         void bw_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -46,26 +44,37 @@ namespace Netron
             if (gameWindow.Image == null)
                 gameWindow.Image = new Bitmap(gameWindow.Width, gameWindow.Height);
             
-            float cellWidth = gameWindow.Width / gr.Width;
-            float cellHeight = gameWindow.Height / gr.Height;
+            float cellWidth = (float)gameWindow.Width / _gr.Width;
+            float cellHeight = (float)gameWindow.Height / _gr.Height;
             Graphics g = Graphics.FromImage(gameWindow.Image);
-            foreach (TronBase tb in gr.Map)
+            g.Clear(Color.Transparent);
+            float testx = 0;
+            float testy = 0;
+            for(testx = 0; testx < cellWidth*_gr.Width;testx+=cellWidth)
             {
-                Bitmap icon = resize(tb.Image, (int)cellWidth, (int)cellHeight);
-                if (tb.Direction == TronBase.DirectionType.East)
+                for(testy = 0; testy < cellHeight*_gr.Height;testy+=cellHeight)
                 {
-                    icon.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                    g.DrawRectangle(new Pen(Brushes.CadetBlue), testx, testy, testx + cellWidth, testy + cellHeight);
                 }
-                else if (tb.Direction == TronBase.DirectionType.South)
-                {
-                    icon.RotateFlip(RotateFlipType.Rotate180FlipNone);
-                }
-                else if (tb.Direction == TronBase.DirectionType.West)
-                {
-                    icon.RotateFlip(RotateFlipType.Rotate270FlipNone);
-                }
-                g.DrawImage(icon, new PointF(tb.XPos/gr.Width * cellWidth, tb.YPos/gr.Height * cellHeight));
             }
+
+            foreach (TronBase tb in _gr.Map)
+            {
+                if (tb != null)
+                {
+                    
+                    float x = (float) tb.XPos*cellWidth;
+                    float y = (float) tb.YPos*cellHeight;
+                    
+                    if (tb.Image != null)
+                    {
+                        Bitmap icon = resize(tb.Image, (int)cellWidth, (int)cellHeight);
+                        g.DrawImage(icon,
+                                    new PointF(x, y));
+                    }
+                }
+            }
+            gameWindow.Refresh();
         }
         private Bitmap resize(Bitmap src, int width, int height)
         {
@@ -77,19 +86,42 @@ namespace Netron
 
         private void setUpServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Comm = new Communicator(gr);
+            Comm = new Communicator(_gr);
+            SetupEventHandlers();
         }
-
+        private void SetupEventHandlers()
+        {
+            Comm.OnInitComplete += Comm_OnInitComplete;
+            Comm.OnNewPlayerConnect += Comm_OnNewPlayerConnect;
+            Comm.OnPlayerDisconnect += Comm_OnPlayerDisconnect;
+        }
         private void button1_Click(object sender, EventArgs e)
         {
-
+            MePlayer.Act();
+            Draw();
         }
 
         private void connectToServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ServerConnectionDialog scd = new ServerConnectionDialog();
             scd.ShowDialog();
-            Comm = new Communicator(gr, scd.Hostname);
+            Comm = new Communicator(_gr, scd.Hostname);
+            SetupEventHandlers();
+        }
+
+        void Comm_OnPlayerDisconnect(object sender, EventArgs e)
+        {
+            
+        }
+
+        void Comm_OnNewPlayerConnect(object sender, EventArgs e)
+        {
+            toolStripStatusLabel1.Text = "Player connected! Now " + Comm.Players.Count + " players connected";
+        }
+
+        void Comm_OnInitComplete(object sender, EventArgs e)
+        {
+            toolStripStatusLabel1.Text = "Initialization complete";
         }
 
         private void gameWindow_Click(object sender, EventArgs e)
@@ -101,11 +133,11 @@ namespace Netron
         {
             if (e.KeyCode == Keys.Left)
             {
-                player.AcceptUserInput(TronBase.DirectionType.West);
+                MePlayer.AcceptUserInput(TronBase.DirectionType.West);
             }
             else if (e.KeyCode == Keys.Right)
             {
-                player.AcceptUserInput(TronBase.DirectionType.East);
+                MePlayer.AcceptUserInput(TronBase.DirectionType.East);
             }            
         }
 

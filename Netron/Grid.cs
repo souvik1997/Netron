@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 
 namespace Netron
 {
@@ -54,21 +55,22 @@ namespace Netron
         }
         public bool IsValidLocation(int x, int y)
         {
-            return (x >= 0) && (y >= 0) && (x < Map.GetLength(0)) && (y < Map.GetLength(1));
+            Console.WriteLine("" + x + "," + y);
+            return (x >= 0) && (y >= 0) && (x < Width) && (y < Height);
         }
         public void Exec(TronInstruction ti, int x, int y, TronBase tb)
         {
             if (ti == TronInstruction.AddToGrid)
             {
-                Set(tb, x, y);
+                tb.PutSelfInGrid(this, x, y);
             }
             else if (ti == TronInstruction.MoveEntity)
             {
-                Move(tb, x, y);
+                tb.MoveTo(x,y);
             }
             else if (ti == TronInstruction.RemoveFromGrid)
             {
-                Remove(x,y);
+                tb.RemoveFromGrid();
             }
         }
     }

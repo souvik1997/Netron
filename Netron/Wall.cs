@@ -6,6 +6,11 @@ namespace Netron
     public class Wall : TronBase
     {
 
+        public Wall()
+        {
+            Image = Properties.Resources.Wall;
+        }
+        
         public override TronType GetTronType()
         {
             return TronType.Wall;

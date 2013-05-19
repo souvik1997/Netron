@@ -21,6 +21,7 @@ namespace Netron
         public Player(int num)
         {
             PlayerNum = num;
+            Image = Properties.Resources.TronLightcycleFinal;
         }
 
         
@@ -32,7 +33,7 @@ namespace Netron
         }
         public static Player Deserialize(string str)
         {
-            Console.WriteLine(str);
+            
             var strs = str.Split(',');
             Player p = new Player(Int32.Parse(strs[4]))
                            {
@@ -63,6 +64,8 @@ namespace Netron
             {
                 MoveTo(coords[0], coords[1]);
                 Wall wl = new Wall();
+                wl.Direction = Direction;
+                wl.Color = Color;
                 wl.PutSelfInGrid(Grid, oldx, oldy);
             }
             else

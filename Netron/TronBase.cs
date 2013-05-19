@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Text;
 
 namespace Netron
@@ -9,15 +11,22 @@ namespace Netron
     }
     public abstract class TronBase 
     {
+        
         public enum DirectionType
         {
             North = 45*0, Northeast = 45*1, East = 45*2, Southeast = 45*3, South = 45*4, Southwest = 45*5, West = 45*6, Northwest = 45*7
         }
         public abstract TronType GetTronType();
+        private Bitmap _image;
         public Bitmap Image
         {
-            get;
-            set;
+            get { return _image; }
+            set 
+            { 
+                _image = value;
+                if (_image != null)
+                    _image = TintBitmap(Image, Color);
+            }
         }
 
         public virtual string Serialize()
@@ -32,10 +41,34 @@ namespace Netron
             sb.Append(Color.ToArgb());
             return sb.ToString();
         }
+
+        private Color _color;
         public Color Color
         {
-            get;
-            set;
+            get { return _color; }
+            set 
+            { 
+                _color = value;
+                if (Image != null)
+                    Image = TintBitmap(Image, _color);
+            }
+        }
+        /* TODO: Test this code! http://bytes.com/topic/net/answers/796819-c-app-tint-color */
+        private static Bitmap TintBitmap(Bitmap b, Color tintColor)
+        {
+            Bitmap b2 = new Bitmap(b.Width, b.Height);
+            for (int x = 0; x < b.Width; x++)
+            {
+                for (int y = 0; y < b.Height; y++)
+                {
+                    
+                    Color src = b.GetPixel(x, y);
+                    b2.SetPixel(x, y,
+                                Color.FromArgb(src.A, (src.R + tintColor.R*2)/3, (src.B + tintColor.B*2)/3,
+                                               (src.G + tintColor.G*2)/3));
+                }
+            }
+            return b2;
         }
         public Grid Grid
         {
@@ -82,11 +115,11 @@ namespace Netron
         {
             int proposedx = XPos;
             int proposedy = YPos;
-            if (dt == DirectionType.North && proposedy > howMuchToMove-1)
+            if (dt == DirectionType.North )
             {
                 proposedy -= howMuchToMove;
             }
-            else if (dt == DirectionType.Northeast && proposedy > howMuchToMove-1)
+            else if (dt == DirectionType.Northeast)
             {
                 proposedy -= howMuchToMove;
                 proposedx += howMuchToMove;
@@ -104,16 +137,16 @@ namespace Netron
             {
                 proposedy += howMuchToMove;
             }
-            else if (dt == DirectionType.Southwest && proposedx > howMuchToMove-1)
+            else if (dt == DirectionType.Southwest)
             {
                 proposedx -= howMuchToMove;
                 proposedy += howMuchToMove;
             }
-            else if (dt == DirectionType.West && proposedx > howMuchToMove-1)
+            else if (dt == DirectionType.West)
             {
                 proposedx -= howMuchToMove;
             }
-            else if (dt == DirectionType.Northwest && proposedy > howMuchToMove-1)
+            else if (dt == DirectionType.Northwest)
             {
                 proposedx += howMuchToMove;
                 proposedy -= howMuchToMove;
@@ -121,7 +154,9 @@ namespace Netron
             return new[] {proposedx, proposedy};
 
         }
+#pragma warning disable 659
         public override bool Equals(object obj)
+#pragma warning restore 659
         {
             TronBase tb = obj as TronBase;
             if (tb == null) return false;
