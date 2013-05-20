@@ -19,7 +19,7 @@ namespace Netron
         public MainWindow()
         {
             InitializeComponent();
-            _gr = new Grid(50, 50);
+            _gr = new Grid(20, 20);
             _bw = new BackgroundWorker();
             _bw.DoWork += bw_DoWork;
             MePlayer = new Player(0) {Color = Color.Tomato};
@@ -32,8 +32,8 @@ namespace Netron
         {
             for (int x = 0; x < 1000; x++)
             {
-                MePlayer.Act();
-                p.Act();
+                foreach (Player player in Comm.Players)
+                    player.Act();
                 Draw();
             }
         }
@@ -50,7 +50,7 @@ namespace Netron
                 float cellWidth = (float) gameWindow.Width/_gr.Width;
                 float cellHeight = (float) gameWindow.Height/_gr.Height;
                 Graphics g = Graphics.FromImage(gameWindow.Image);
-                g.Clear(Color.Black);
+                g.Clear(Color.Transparent);
 #if DRAW_GRID
                 float testx = 0;
                 float testy = 0;
@@ -114,6 +114,8 @@ namespace Netron
         private void setUpServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Comm = new Communicator(_gr);
+
+            
             SetupEventHandlers();
         }
         private void SetupEventHandlers()
@@ -148,6 +150,7 @@ namespace Netron
         void Comm_OnInitComplete(object sender, EventArgs e)
         {
             toolStripStatusLabel1.Text = "Initialization complete";
+            Comm.Players.Add(p);
         }
 
         private void gameWindow_Click(object sender, EventArgs e)

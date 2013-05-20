@@ -47,12 +47,13 @@ namespace Netron
                 {
                     
                     Color src = b.GetPixel(x, y);
-                    int t = src.R + src.B + src.G;
+                    
                     Color newColor = Color.FromArgb(src.A, (src.R + tintColor.R)/2, (src.G + tintColor.G)/2,
                                                     (src.B + tintColor.B)/2);
-
+                    
                     b2.SetPixel(x, y,
                                 newColor);
+                    
                 }
             }
             return b2;

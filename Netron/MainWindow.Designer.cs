@@ -125,6 +125,7 @@
             this.Controls.Add(this.button1);
             this.Controls.Add(this.gameWindow);
             this.Controls.Add(this.menuStrip1);
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainWindow";
             this.Text = "Netron";
