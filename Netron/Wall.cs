@@ -1,31 +1,40 @@
 ﻿using System;
 using System.Drawing;
-
+using System.Collections.Generic;
 namespace Netron
 {
+    public class IconSet
+    {
+        public Bitmap wallNS;
+        public Bitmap wallEW;
+        public Bitmap wallUR;
+        public Bitmap wallUL;
+        public Bitmap wallBL;
+        public Bitmap wallBR;
+    }
     public class Wall : TronBase
     {
+        public static List<Color> IconSetColors = new List<Color>();
+        public static List<IconSet> IconSets = new List<IconSet>();
+
         private static readonly Bitmap owallNS = Properties.Resources.WallNS;
         private static readonly Bitmap owallEW = Properties.Resources.WallEW;
         private static readonly Bitmap owallUR = Properties.Resources.WallUR;
         private static readonly Bitmap owallUL = Properties.Resources.WallUL;
         private static readonly Bitmap owallBL = Properties.Resources.WallBL;
         private static readonly Bitmap owallBR = Properties.Resources.WallBR;
-
-        private Bitmap wallNS;
-        private Bitmap wallEW;
-        private Bitmap wallUR;
-        private Bitmap wallUL;
-        private Bitmap wallBL;
-        private Bitmap wallBR;
+        IconSet ics;
+        
         public Wall()
         {
-            wallNS = owallNS;
-            wallEW = owallEW;
-            wallUR = owallUR;
-            wallUL = owallUL;
-            wallBL = owallBL;
-            wallBR = owallBR;
+            ics = new IconSet();
+            ics.wallNS = owallNS;
+            ics.wallEW = owallEW;
+            ics.wallUR = owallUR;
+            ics.wallUL = owallUL;
+            ics.wallBL = owallBL;
+            ics.wallBR = owallBR;            
+            
         }
         
         public override TronType GetTronType()
@@ -42,23 +51,23 @@ namespace Netron
                 {
                     case DirectionType.East:
                     case DirectionType.West:
-                        obj = wallEW;
+                        obj = ics.wallEW;
                         break;
                     case DirectionType.North:
                     case DirectionType.South:
-                        obj = wallNS;
+                        obj = ics.wallNS;
                         break;
                     case DirectionType.Northwest:
-                        obj = wallUL;
+                        obj = ics.wallUL;
                         break;
                     case DirectionType.Northeast:
-                        obj = wallUR;
+                        obj = ics.wallUR;
                         break;
                     case DirectionType.Southeast:
-                        obj = wallBR;
+                        obj = ics.wallBR;
                         break;
                     case DirectionType.Southwest:
-                        obj = wallBL;
+                        obj = ics.wallBL;
                         break;
                         
                 }
@@ -76,12 +85,22 @@ namespace Netron
             get { return _color; }
             set
             {
-                wallNS = TintBitmap(owallNS, value);
-                wallEW = TintBitmap(owallEW, value);
-                wallBL = TintBitmap(owallBL, value);
-                wallBR = TintBitmap(owallBR, value);
-                wallUL = TintBitmap(owallUL, value);
-                wallUR = TintBitmap(owallUR, value);
+                
+                if (IconSetColors.Contains(value))
+                    ics = IconSets[IconSetColors.IndexOf(value)];
+                else
+                {
+                    Console.WriteLine("*");
+                    ics = new IconSet();
+                    ics.wallNS = TintBitmap(owallNS, value);
+                    ics.wallEW = TintBitmap(owallEW, value);
+                    ics.wallBL = TintBitmap(owallBL, value);
+                    ics.wallBR = TintBitmap(owallBR, value);
+                    ics.wallUL = TintBitmap(owallUL, value);
+                    ics.wallUR = TintBitmap(owallUR, value);
+                    IconSetColors.Add(value);
+                    IconSets.Add(ics);
+                }
                 _color = value;
             } 
         }

@@ -1,10 +1,10 @@
-﻿#define DRAW_GRID
+﻿//#define DRAW_GRID
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-
-
+using System.Collections.Generic;
+using System.Data;
 namespace Netron
 {
     public partial class MainWindow : Form
@@ -15,7 +15,15 @@ namespace Netron
         private readonly BackgroundWorker _bw;
         public static Player MePlayer;
         private static readonly object _gLock = new object();
-        private Player p;
+        public static List<Wall> Walls = new List<Wall>();
+        private float cellWidth;
+        private float cellHeight;
+
+        private Bitmap bWall;
+        private Bitmap bPlayers;
+        private Graphics gMain;
+        private Graphics gWall;
+        private Graphics gPlayers;
         public MainWindow()
         {
             InitializeComponent();
@@ -24,8 +32,15 @@ namespace Netron
             _bw.DoWork += bw_DoWork;
             MePlayer = new Player(0) {Color = Color.Tomato};
             MePlayer.PutSelfInGrid(_gr, 2, 3);
-            p = new Player(1) {Color = Color.BlueViolet};
-            p.PutSelfInGrid(_gr, 5, 4);
+            cellWidth = (float)gameWindow.Width / _gr.Width;
+            cellHeight = (float)gameWindow.Height / _gr.Height;
+            gameWindow.Image = new Bitmap(gameWindow.Width, gameWindow.Height);
+            bWall = new Bitmap(gameWindow.Width, gameWindow.Height);
+            bPlayers = new Bitmap(gameWindow.Width, gameWindow.Height); 
+            gMain = Graphics.FromImage(gameWindow.Image);
+            gWall = Graphics.FromImage(bWall);
+            gPlayers = Graphics.FromImage(bPlayers);
+            
         }
         
         void bw_DoWork(object sender, DoWorkEventArgs e)
@@ -43,14 +58,11 @@ namespace Netron
         {
 
             lock (_gLock)
-            {
-                if (gameWindow.Image == null)
-                    gameWindow.Image = new Bitmap(gameWindow.Width, gameWindow.Height);
+            {                    
 
-                float cellWidth = (float) gameWindow.Width/_gr.Width;
-                float cellHeight = (float) gameWindow.Height/_gr.Height;
-                Graphics g = Graphics.FromImage(gameWindow.Image);
-                g.Clear(Color.Transparent);
+                
+                gMain.Clear(Color.Transparent);
+                gPlayers.Clear(Color.Transparent);
 #if DRAW_GRID
                 float testx = 0;
                 float testy = 0;
@@ -63,23 +75,39 @@ namespace Netron
                     }
                 }
 #endif
-
-                foreach (TronBase tb in _gr.Map)
+                foreach (Wall tb in Walls)
                 {
-                    if (tb != null)
+                    if (tb != null && tb.Image != null)
                     {
 
-                        float x = tb.XPos*cellWidth;
-                        float y = tb.YPos*cellHeight;
+                        float x = tb.XPos * cellWidth;
+                        float y = tb.YPos * cellHeight;
 
-                        if (tb.Image != null)
-                        {
-                            Bitmap icon = resize(tb.Image, (int) cellWidth+1, (int) cellHeight+1);
-                            g.DrawImage(icon,
-                                        new PointF((int)Math.Round(x), (int)Math.Round(y)));
-                        }
+
+                        Bitmap icon = resize(tb.Image, (int)cellWidth + 1, (int)cellHeight + 1);
+                        gWall.DrawImage(icon,
+                                new PointF((int)Math.Round(x), (int)Math.Round(y)));
+
                     }
                 }
+                foreach (Player tb in Comm.Players)
+                {
+                    if (tb != null && tb.Image != null)
+                    {
+
+                        float x = tb.XPos * cellWidth;
+                        float y = tb.YPos * cellHeight;
+
+                        
+                        Bitmap icon = resize(tb.Image, (int)cellWidth + 1, (int)cellHeight + 1);
+                        gPlayers.DrawImage(icon,
+                                new PointF((int)Math.Round(x), (int)Math.Round(y)));
+                        
+                    }
+                }
+                gMain.DrawImage(bPlayers, 0, 0);
+                gMain.DrawImage(bWall, 0, 0);
+                Walls.Clear();
                 RefreshGameWindow();
             }
         }
@@ -126,7 +154,7 @@ namespace Netron
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            _bw.RunWorkerAsync();
+            
         }
 
         private void connectToServerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -150,7 +178,13 @@ namespace Netron
         void Comm_OnInitComplete(object sender, EventArgs e)
         {
             toolStripStatusLabel1.Text = "Initialization complete";
+            Player p = new Player(1) { Color = Color.BlueViolet };
+            p.PutSelfInGrid(_gr, 5, 4);
             Comm.Players.Add(p);
+            p = new Player(2) { Color = Color.DarkGreen };
+            p.PutSelfInGrid(_gr, 7, 8);
+            Comm.Players.Add(p);
+            _bw.RunWorkerAsync();
         }
 
         private void gameWindow_Click(object sender, EventArgs e)

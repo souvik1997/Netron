@@ -78,7 +78,7 @@ namespace Netron
                 _server.OnMessageReceived += server_OnMessageReceived;
                 _server.StartAsync();
 
-                _timer = new Timer {Interval = 10000};
+                _timer = new Timer {Interval = 1000};
                 _timer.Tick += _timer_Tick;
                 _timer.Start();
             }

@@ -89,6 +89,7 @@ namespace Netron
             {
                 Wall wl = new Wall {Direction = Direction, Color = Color};
                 wl.PutSelfInGrid(Grid, oldx, oldy);
+                MainWindow.Walls.Add(wl);
             }
             else
             {
@@ -110,15 +111,17 @@ namespace Netron
             int oldy = YPos;
             
             MoveForwardIfAbleTo();
-            
+            Wall wl = null;
             if ((olddir == DirectionType.North && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.South))
-                (new Wall {Direction = DirectionType.Northwest, Color = Color}).PutSelfInGrid(Grid, oldx, oldy);
-            if ((olddir == DirectionType.North && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.South))
-                (new Wall { Direction = DirectionType.Northeast, Color = Color }).PutSelfInGrid(Grid, oldx, oldy);
-            if ((olddir == DirectionType.South && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.North))
-                (new Wall { Direction = DirectionType.Southwest, Color = Color }).PutSelfInGrid(Grid, oldx, oldy);
-            if ((olddir == DirectionType.South && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.North))
-                (new Wall { Direction = DirectionType.Southeast, Color = Color }).PutSelfInGrid(Grid, oldx, oldy);
+                wl = (new Wall { Direction = DirectionType.Northwest, Color = Color });
+            else if ((olddir == DirectionType.North && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.South))
+                wl = (new Wall { Direction = DirectionType.Northeast, Color = Color });
+            else if ((olddir == DirectionType.South && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.North))
+                wl = (new Wall { Direction = DirectionType.Southwest, Color = Color });
+            else if ((olddir == DirectionType.South && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.North))
+                wl = (new Wall { Direction = DirectionType.Southeast, Color = Color });
+            wl.PutSelfInGrid(Grid, oldx, oldy);
+            MainWindow.Walls.Add(wl);
             
 
         }

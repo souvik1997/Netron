@@ -37,9 +37,9 @@ namespace Netron
         }
 
         public abstract Color Color { get; set; }
-        /* TODO: Test this code! http://bytes.com/topic/net/answers/796819-c-app-tint-color */
         protected static Bitmap TintBitmap(Bitmap b, Color tintColor)
         {
+            
             Bitmap b2 = new Bitmap(b.Width, b.Height);
             for (int x = 0; x < b.Width; x++)
             {
