@@ -5,7 +5,8 @@ using System.Text;
 using System.Net.Sockets;
 using System.Threading;
 using ServerFramework.NET;
-using Timer = System.Windows.Forms.Timer;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace Netron
 {
@@ -57,6 +58,8 @@ namespace Netron
         private readonly Server _server;
         private readonly Grid _gr;
         private readonly Timer _timer;
+        private double _elapsedTime;
+        private const double Timeout = 1;
         public const char Separator = ';';
 
         private readonly TcpClient _serverConnection;
@@ -78,9 +81,10 @@ namespace Netron
                 _server.OnMessageReceived += server_OnMessageReceived;
                 _server.StartAsync();
 
-                _timer = new Timer {Interval = 1000};
-                _timer.Tick += _timer_Tick;
+                _timer = new Timer {Interval = 100};
+                _timer.Elapsed += _timer_Elapsed;
                 _timer.Start();
+                _elapsedTime = 0;
             }
             else if (masterIP != null)
             {
@@ -120,9 +124,13 @@ namespace Netron
             }
             
         }
-        void _timer_Tick(object sender, EventArgs e)
+        void _timer_Elapsed(object sender, EventArgs e)
         {
-            _timer.Stop();
+            Timer t = sender as Timer;
+            if (t == null) return;
+            _elapsedTime += t.Interval;
+            if (_elapsedTime >= Timeout)
+                t.Stop();
             FinalizeConnections();
         }
         void FinalizeConnections()

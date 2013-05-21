@@ -5,36 +5,37 @@ namespace Netron
 {
     public class IconSet
     {
-        public Bitmap wallNS;
-        public Bitmap wallEW;
-        public Bitmap wallUR;
-        public Bitmap wallUL;
-        public Bitmap wallBL;
-        public Bitmap wallBR;
+        public Bitmap WallNS;
+        public Bitmap WallEW;
+        public Bitmap WallUR;
+        public Bitmap WallUL;
+        public Bitmap WallBL;
+        public Bitmap WallBR;
     }
     public class Wall : TronBase
     {
-        public static List<Color> IconSetColors = new List<Color>();
-        public static List<IconSet> IconSets = new List<IconSet>();
+        public static Dictionary<Color, IconSet> IconSets = new Dictionary<Color, IconSet>();
 
-        private static readonly Bitmap owallNS = Properties.Resources.WallNS;
-        private static readonly Bitmap owallEW = Properties.Resources.WallEW;
-        private static readonly Bitmap owallUR = Properties.Resources.WallUR;
-        private static readonly Bitmap owallUL = Properties.Resources.WallUL;
-        private static readonly Bitmap owallBL = Properties.Resources.WallBL;
-        private static readonly Bitmap owallBR = Properties.Resources.WallBR;
-        IconSet ics;
+        private static readonly Bitmap _owallNS = Properties.Resources.WallNS;
+        private static readonly Bitmap _owallEW = Properties.Resources.WallEW;
+        private static readonly Bitmap _owallUR = Properties.Resources.WallUR;
+        private static readonly Bitmap _owallUL = Properties.Resources.WallUL;
+        private static readonly Bitmap _owallBL = Properties.Resources.WallBL;
+        private static readonly Bitmap _owallBR = Properties.Resources.WallBR;
+        IconSet _ics;
         
         public Wall()
         {
-            ics = new IconSet();
-            ics.wallNS = owallNS;
-            ics.wallEW = owallEW;
-            ics.wallUR = owallUR;
-            ics.wallUL = owallUL;
-            ics.wallBL = owallBL;
-            ics.wallBR = owallBR;            
             
+            _ics = new IconSet
+                    {
+                        WallNS = _owallNS,
+                        WallEW = _owallEW,
+                        WallUR = _owallUR,
+                        WallUL = _owallUL,
+                        WallBL = _owallBL,
+                        WallBR = _owallBR
+                    };
         }
         
         public override TronType GetTronType()
@@ -51,23 +52,23 @@ namespace Netron
                 {
                     case DirectionType.East:
                     case DirectionType.West:
-                        obj = ics.wallEW;
+                        obj = _ics.WallEW;
                         break;
                     case DirectionType.North:
                     case DirectionType.South:
-                        obj = ics.wallNS;
+                        obj = _ics.WallNS;
                         break;
                     case DirectionType.Northwest:
-                        obj = ics.wallUL;
+                        obj = _ics.WallUL;
                         break;
                     case DirectionType.Northeast:
-                        obj = ics.wallUR;
+                        obj = _ics.WallUR;
                         break;
                     case DirectionType.Southeast:
-                        obj = ics.wallBR;
+                        obj = _ics.WallBR;
                         break;
                     case DirectionType.Southwest:
-                        obj = ics.wallBL;
+                        obj = _ics.WallBL;
                         break;
                         
                 }
@@ -86,20 +87,21 @@ namespace Netron
             set
             {
                 
-                if (IconSetColors.Contains(value))
-                    ics = IconSets[IconSetColors.IndexOf(value)];
+                if (IconSets.ContainsKey(value))
+                    _ics = IconSets[value];
                 else
                 {
                     Console.WriteLine("*");
-                    ics = new IconSet();
-                    ics.wallNS = TintBitmap(owallNS, value);
-                    ics.wallEW = TintBitmap(owallEW, value);
-                    ics.wallBL = TintBitmap(owallBL, value);
-                    ics.wallBR = TintBitmap(owallBR, value);
-                    ics.wallUL = TintBitmap(owallUL, value);
-                    ics.wallUR = TintBitmap(owallUR, value);
-                    IconSetColors.Add(value);
-                    IconSets.Add(ics);
+                    _ics = new IconSet
+                              {
+                                  WallNS = TintBitmap(_owallNS, value),
+                                  WallEW = TintBitmap(_owallEW, value),
+                                  WallBL = TintBitmap(_owallBL, value),
+                                  WallBR = TintBitmap(_owallBR, value),
+                                  WallUL = TintBitmap(_owallUL, value),
+                                  WallUR = TintBitmap(_owallUR, value)
+                              };
+                    IconSets.Add(value, _ics);
                 }
                 _color = value;
             } 

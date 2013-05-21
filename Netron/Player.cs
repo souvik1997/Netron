@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Net;
-using System.Net.Sockets;
 using System.Text;
 
 namespace Netron
@@ -21,6 +19,11 @@ namespace Netron
         private readonly Bitmap _oimage;
         public override sealed Bitmap Image { get; set; }
 
+        public bool Dead
+        {
+            get;
+            private set;
+        }
         public Player(int num)
         {
             PlayerNum = num;
@@ -62,10 +65,15 @@ namespace Netron
         }
         public void AcceptUserInput(DirectionType toTurn)
         {
-            Direction = toTurn;
+            //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));
+            if (Dead) return;
+            if (toTurn != Direction && toTurn != (DirectionType)(((int)Direction+180)%360))
+                Turn(toTurn);
             MainWindow.Comm.Send(MainWindow.Comm.GeneratePacket(this, TronInstruction.DoNothing, XPos, YPos));
         }
+#pragma warning disable 659
         public override bool Equals(object obj)
+#pragma warning restore 659
         {
             Player p = obj as Player;
             if (p == null) return false;
@@ -81,31 +89,38 @@ namespace Netron
             }
             return false;
         }
+
+        private readonly object _actLock = new object();
         public override void Act()
         {
-            int oldx = XPos;
-            int oldy = YPos;
-            if (MoveForwardIfAbleTo())
+            lock (_actLock)
             {
-                Wall wl = new Wall {Direction = Direction, Color = Color};
-                wl.PutSelfInGrid(Grid, oldx, oldy);
-                MainWindow.Walls.Add(wl);
+                if (Dead) return;
+                int oldx = XPos;
+                int oldy = YPos;
+                if (MoveForwardIfAbleTo())
+                {
+                    Wall wl = new Wall {Direction = Direction, Color = Color};
+                    wl.PutSelfInGrid(Grid, oldx, oldy);
+                    MainWindow.Walls.Add(wl);
+                }
+                else
+                {
+                    Dead = true;
+                }
             }
-            else
-            {
-                int dir = (int)Direction;
-                dir += (new Random()).Next(2) == 1 ? 90: -90;
-                dir %= 360;
-                Turn((DirectionType)dir);
-            }
-            
+
         }
         private void Turn(DirectionType newDir)
         {
 
             DirectionType olddir = Direction;
             Direction = newDir;
-            if (!Grid.IsValidLocation(GetAdjacentLocation(newDir,1)) || Grid.Get(GetAdjacentLocation(newDir, 1)) != null) return;
+            if (!Grid.IsValidLocation(GetAdjacentLocation(newDir,1)) || Grid.Get(GetAdjacentLocation(newDir, 1)) != null)
+            {
+                Dead = true;
+                return;
+            }
             
             int oldx = XPos;
             int oldy = YPos;
@@ -120,10 +135,12 @@ namespace Netron
                 wl = (new Wall { Direction = DirectionType.Southwest, Color = Color });
             else if ((olddir == DirectionType.South && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.North))
                 wl = (new Wall { Direction = DirectionType.Southeast, Color = Color });
-            wl.PutSelfInGrid(Grid, oldx, oldy);
-            MainWindow.Walls.Add(wl);
-            
 
+            if (wl != null)
+            {
+                wl.PutSelfInGrid(Grid, oldx, oldy);
+                MainWindow.Walls.Add(wl);
+            }
         }
     }
 }

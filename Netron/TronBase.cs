@@ -14,7 +14,7 @@ namespace Netron
         
         public enum DirectionType
         {
-            North = 45*0, Northeast = 45*1, East = 45*2, Southeast = 45*3, South = 45*4, Southwest = 45*5, West = 45*6, Northwest = 45*7
+            North = 45*0, Northeast = 45*1, East = 45*2, Southeast = 45*3, South = 45*4, Southwest = 45*5, West = 45*6, Northwest = 45*7, Null = -1
         }
         public abstract TronType GetTronType();
         public abstract Bitmap Image
