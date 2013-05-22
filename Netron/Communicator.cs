@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using ServerFramework.NET;
 using System.Timers;
+using System.IO;
 using Timer = System.Timers.Timer;
 
 namespace Netron
@@ -21,7 +22,7 @@ namespace Netron
      */ 
     public enum TronInstruction
     {
-        AddToGrid = 0x01, MoveEntity = 0x02, RemoveFromGrid = 0x03, DoNothing = 0x04, ChangePlayerNum=0x05, Connect=0x06, AddAndThenMoveEntity=0x07, InitComplete=0x08, InstructionEnd = 0xFF
+        AddToGrid = 0x01, MoveEntity = 0x02, RemoveFromGrid = 0x03, DoNothing = 0x04, ChangePlayerNum=0x05, Connect=0x06, AddAndThenMoveEntity=0x07, InitComplete=0x08, InstructionEnd = '\n'
     }
     public enum TronCommunicatorStatus
     {
@@ -88,7 +89,7 @@ namespace Netron
 
             if (Tcs == TronCommunicatorStatus.Master)
             {
-                _server = new Server(1337, new List<char> { '\n', '\r' });
+                _server = new Server(1337, new List<char> { (char)TronInstruction.InstructionEnd, '\n', '\r' });
                 _server.OnClientConnect += server_OnClientConnect;
                 _server.OnClientDisconnect += server_OnClientDisconnect;
                 _server.OnMessageReceived += server_OnMessageReceived;
@@ -100,15 +101,13 @@ namespace Netron
                 ElapsedTime = 0;
             }
             else if (masterIP != null)
-            {
-                byte[] buf = new [] {(byte) TronInstruction.Connect, (byte)'\n'};
+            {                
                 _serverConnection = new TcpClient();
                 _serverConnection.Connect(_masterIP, 1337);
                 _serverConnectionStream = _serverConnection.GetStream();
                 _serverConnectionStream.BeginRead(new byte[0], 0, 0, ServerConnectionStreamOnRead,
                                                   _serverConnectionStream);
                
-                _serverConnectionStream.Write(buf.ToArray(), 0, buf.Length);
             }
             Console.WriteLine("Running as " + Tcs);
         }
@@ -116,25 +115,28 @@ namespace Netron
         {
             var stream = iar.AsyncState as NetworkStream;
             if (stream == null) return;
-            try
-            {
+            /*try
+            {*/
                 stream.EndRead(iar);
                 List<byte> list = new List<byte>();
                 while (stream.DataAvailable)
                 {
-                    byte b = (byte) stream.ReadByte();
-                    if (b != (byte) '\n')
-                        list.Add(b);
+                    int b = stream.ReadByte();
+                    Console.Write(b+",");
+                    if (b != (byte)TronInstruction.InstructionEnd)
+                        list.Add((byte)b);
+                    else
+                        break;
                 }
+                Console.WriteLine("\n");
                 Parse(list.ToArray());
                 _serverConnectionStream.BeginRead(new byte[0], 0, 0, ServerConnectionStreamOnRead,
                                                   _serverConnectionStream);
-            }
-            catch (Exception e)
+            /*}
+            catch (IOException e)
             {
                 Console.WriteLine("Caught exception: {0}", e.Message);
-                /* TODO: Mark this Communicator as "dirty" so it can't be used to communicate anymore */
-            }
+            }*/
             
         }
         void _timer_Elapsed(object sender, EventArgs e)
@@ -161,7 +163,7 @@ namespace Netron
 // ReSharper restore ForCanBeConvertedToForeach
             {
                 Player p = Players[x];
-                string ins = GeneratePacket(p, TronInstruction.AddToGrid, curx, _gr.Height / 2);
+                string ins = GeneratePacket(p, TronInstruction.MoveEntity, curx, _gr.Height / 2);
                 Parse(ins);
                 Send(ins);
 
@@ -169,8 +171,7 @@ namespace Netron
                 p.YPos = _gr.Height / 2;
                 curx += gap;
             }
-            Send(GeneratePacket(MainWindow.MePlayer, TronInstruction.InitComplete, MainWindow.MePlayer.XPos,
-                                MainWindow.MePlayer.YPos));
+            Send("aasdsgsfgh\n");
             FireOnInitCompleteEvent();
         }
         void server_OnClientDisconnect(object sender, ClientEventArgs e)
@@ -195,14 +196,15 @@ namespace Netron
             {
                 var player = new Player(Players.Count);
                 Players.Add(player);
-                e.Client.Tag = player.PlayerNum;
-                Console.WriteLine("Waiting 100 milliseconds for client");
-                
-                e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum + "\n");
-                Thread.Sleep(100);
-                e.Client.SendData(GeneratePacket(MainWindow.MePlayer, TronInstruction.DoNothing, MainWindow.MePlayer.XPos,
-                                                 MainWindow.MePlayer.YPos) + "\n");
+                e.Client.Tag = player.PlayerNum;                
+                e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum + (char)TronInstruction.InstructionEnd);
                 Console.WriteLine("Player joined!");
+            }
+            for (int x = 0; x < Players.Count; x++)
+            {
+                Player p = Players[x];
+                string ins = GeneratePacket(p, TronInstruction.AddToGrid, p.XPos, p.YPos);
+                e.Client.SendData(ins);
             }
             Console.WriteLine("Connection!");
             FireOnNewPlayerConnectEvent();
@@ -223,23 +225,23 @@ namespace Netron
         void Parse(byte[] instr)
         {
             if (instr.Length < 2) return;
-            if (Tcs == TronCommunicatorStatus.Master)
-                Send(instr);
             string str = Encoding.ASCII.GetString(instr);
+            Console.WriteLine("Received {0}", str);
             string[] strs = str.Split(Separator);
-            if (strs.Length == 2)
+            var whattodo = (TronInstruction)Int32.Parse(strs[0]);
+            if (whattodo == TronInstruction.InitComplete)
+            {
+                FireOnInitCompleteEvent();
+            }
+            else if (whattodo == TronInstruction.ChangePlayerNum)
             {
                 MainWindow.MePlayer.PlayerNum = Int32.Parse(strs[1]);
                 Console.WriteLine("Changing player number to " + MainWindow.MePlayer.PlayerNum);
             }
             else
             {
-                var whattodo = (TronInstruction) Int32.Parse(strs[0]);
-                /*if (whattodo == TronInstruction.InitComplete)
-                {
-                    FireOnInitCompleteEvent();
-                    return;
-                }*/
+                
+                
                 var xcoord = Int32.Parse(strs[1]);
                 var ycoord = Int32.Parse(strs[2]);
                 var type = (TronType) Int32.Parse(strs[3]);
@@ -285,8 +287,6 @@ namespace Netron
         }
         public void Send(string tosend)
         {
-            if (!tosend.EndsWith("\n"))
-                tosend += '\n';
             Send(GetBytes(tosend));
         }
         public void Send(byte[] buf)
@@ -297,17 +297,15 @@ namespace Netron
                     {
 
                         NetworkStream stream = _serverConnection.GetStream();
-                        stream.Write(buf.ToArray(), 0, buf.Length);
-                        if (buf[buf.Length - 1] != (byte)'\n')
-                            stream.WriteByte((byte) '\n');
+                        stream.Write(buf, 0, buf.Length);
                     }
                     break;
                 case TronCommunicatorStatus.Master:
                     foreach(Client c in _server.ConnectedClients)
                     {
                         c.SendData(buf);
-                        if (buf[buf.Length - 1] != (byte)'\n')
-                            c.SendData(new[] {(byte) '\n'});
+                        /*if (buf[buf.Length - 1] != (byte)'\n')
+                            c.SendData(new[] {(byte) '\n'});*/
                     }
                     
                     break;
@@ -326,6 +324,7 @@ namespace Netron
             sb.Append((int) te.GetTronType());
             sb.Append(Separator);
             sb.Append(te.Serialize());
+            sb.Append((char)TronInstruction.InstructionEnd);
             return sb.ToString();
 
         }
