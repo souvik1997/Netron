@@ -87,6 +87,7 @@ namespace Netron
         }
         public void Exec(TronInstruction ti, int x, int y, TronBase tb)
         {
+            if (!tb.IsInGrid) tb.PutSelfInGrid(this, x, y);
             switch (ti)
             {
                 case TronInstruction.AddToGrid:

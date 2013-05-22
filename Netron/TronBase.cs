@@ -95,6 +95,7 @@ namespace Netron
         }
         public void MoveTo(int newx, int newy)
         {
+             
             Grid.Move(XPos, YPos, newx, newy);
             XPos = newx;
             YPos = newy;

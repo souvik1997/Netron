@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Net.Sockets;
-using System.Threading;
 using ServerFramework.NET;
-using System.Timers;
 using System.IO;
 using Timer = System.Timers.Timer;
 
@@ -115,8 +112,8 @@ namespace Netron
         {
             var stream = iar.AsyncState as NetworkStream;
             if (stream == null) return;
-            /*try
-            {*/
+            try
+            {
                 stream.EndRead(iar);
                 List<byte> list = new List<byte>();
                 while (stream.DataAvailable)
@@ -132,11 +129,11 @@ namespace Netron
                 Parse(list.ToArray());
                 _serverConnectionStream.BeginRead(new byte[0], 0, 0, ServerConnectionStreamOnRead,
                                                   _serverConnectionStream);
-            /*}
+            }
             catch (IOException e)
             {
                 Console.WriteLine("Caught exception: {0}", e.Message);
-            }*/
+            }
             
         }
         void _timer_Elapsed(object sender, EventArgs e)
@@ -171,7 +168,7 @@ namespace Netron
                 p.YPos = _gr.Height / 2;
                 curx += gap;
             }
-            Send("aasdsgsfgh\n");
+            Send(GeneratePacket(MainWindow.MePlayer,TronInstruction.InitComplete,0,0));
             FireOnInitCompleteEvent();
         }
         void server_OnClientDisconnect(object sender, ClientEventArgs e)
@@ -200,7 +197,9 @@ namespace Netron
                 e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum + (char)TronInstruction.InstructionEnd);
                 Console.WriteLine("Player joined!");
             }
+// ReSharper disable ForCanBeConvertedToForeach
             for (int x = 0; x < Players.Count; x++)
+// ReSharper restore ForCanBeConvertedToForeach
             {
                 Player p = Players[x];
                 string ins = GeneratePacket(p, TronInstruction.AddToGrid, p.XPos, p.YPos);
@@ -328,6 +327,6 @@ namespace Netron
             return sb.ToString();
 
         }
-
+        
     }
 }

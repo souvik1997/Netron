@@ -57,7 +57,7 @@ namespace Netron
                 foreach (Player player in Comm.Players)
                     player.Act();
                 Draw();
-                Thread.Sleep(10);
+                Thread.Sleep(100);
             }
         }
 
