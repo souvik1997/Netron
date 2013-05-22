@@ -156,6 +156,12 @@ namespace Netron
             Comm.OnInitComplete += Comm_OnInitComplete;
             Comm.OnNewPlayerConnect += Comm_OnNewPlayerConnect;
             Comm.OnPlayerDisconnect += Comm_OnPlayerDisconnect;
+            Comm.OnInitTimerTick += Comm_OnInitTimerTick;
+        }
+
+        void Comm_OnInitTimerTick(object sender, EventArgs e)
+        {
+            toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left";
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -182,9 +188,9 @@ namespace Netron
         private void Comm_OnInitComplete(object sender, EventArgs e)
         {
             toolStripStatusLabel1.Text = "Initialization complete";
-            Player p = new Player(1) {Color = Color.BlanchedAlmond};
+           /* Player p = new Player(1) {Color = Color.BlanchedAlmond};
             p.PutSelfInGrid(_gr, 6, 7);
-            Comm.Players.Add(p);
+            Comm.Players.Add(p);*/
             _bw.RunWorkerAsync();
         }
 

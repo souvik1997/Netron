@@ -87,17 +87,17 @@ namespace Netron
         }
         public void Exec(TronInstruction ti, int x, int y, TronBase tb)
         {
-            if (ti == TronInstruction.AddToGrid)
+            switch (ti)
             {
-                tb.PutSelfInGrid(this, x, y);
-            }
-            else if (ti == TronInstruction.MoveEntity)
-            {
-                tb.MoveTo(x,y);
-            }
-            else if (ti == TronInstruction.RemoveFromGrid)
-            {
-                tb.RemoveFromGrid();
+                case TronInstruction.AddToGrid:
+                    tb.PutSelfInGrid(this, x, y);
+                    break;
+                case TronInstruction.MoveEntity:
+                    tb.MoveTo(x,y);
+                    break;
+                case TronInstruction.RemoveFromGrid:
+                    tb.RemoveFromGrid();
+                    break;
             }
         }
     }

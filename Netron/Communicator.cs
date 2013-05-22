@@ -21,7 +21,7 @@ namespace Netron
      */ 
     public enum TronInstruction
     {
-        AddToGrid = 0x01, MoveEntity = 0x02, RemoveFromGrid = 0x03, DoNothing = 0x04, ChangePlayerNum=0x05, Connect=0x06, AddAndThenMoveEntity=0x07, InstructionEnd = 0xFF
+        AddToGrid = 0x01, MoveEntity = 0x02, RemoveFromGrid = 0x03, DoNothing = 0x04, ChangePlayerNum=0x05, Connect=0x06, AddAndThenMoveEntity=0x07, InitComplete=0x08, InstructionEnd = 0xFF
     }
     public enum TronCommunicatorStatus
     {
@@ -33,10 +33,17 @@ namespace Netron
         public event CommunicatorEventHandler OnNewPlayerConnect;
         public event CommunicatorEventHandler OnPlayerDisconnect;
         public event CommunicatorEventHandler OnInitComplete;
+        public event CommunicatorEventHandler OnInitTimerTick;
+
         protected virtual void FireOnNewPlayerConnectEvent()
         {
             if (OnNewPlayerConnect != null)
                 OnNewPlayerConnect(this, new EventArgs());
+        }
+        protected virtual void FireOnInitTimerTickEvent()
+        {
+            if (OnInitTimerTick != null)
+                OnInitTimerTick(this, new EventArgs());
         }
         protected virtual void FireOnPlayerDisconnectEvent()
         {
@@ -58,12 +65,18 @@ namespace Netron
         private readonly Server _server;
         private readonly Grid _gr;
         private readonly Timer _timer;
-        private double _elapsedTime;
-        private const double Timeout = 1;
+        public double ElapsedTime
+        {
+            get;
+            set;
+        }
+        public const double Timeout = 10000;
         public const char Separator = ';';
 
         private readonly TcpClient _serverConnection;
         private readonly NetworkStream _serverConnectionStream;
+
+        private bool _hasFinalized;
         public Communicator(Grid gr, string masterIP = null)
         {
             
@@ -84,7 +97,7 @@ namespace Netron
                 _timer = new Timer {Interval = 100};
                 _timer.Elapsed += _timer_Elapsed;
                 _timer.Start();
-                _elapsedTime = 0;
+                ElapsedTime = 0;
             }
             else if (masterIP != null)
             {
@@ -128,27 +141,36 @@ namespace Netron
         {
             Timer t = sender as Timer;
             if (t == null) return;
-            _elapsedTime += t.Interval;
-            if (_elapsedTime >= Timeout)
+            FireOnInitTimerTickEvent();
+            ElapsedTime += t.Interval;
+            if (ElapsedTime >= Timeout)
+            {
                 t.Stop();
-            FinalizeConnections();
+                FinalizeConnections();
+            }
         }
         void FinalizeConnections()
         {
+            _hasFinalized = true;
             if (Players.Count == 0) return;
             Console.WriteLine("Finalizing connections");
             int gap = _gr.Width/Players.Count;
             int curx = 0;
-            foreach(Player p in Players)
+// ReSharper disable ForCanBeConvertedToForeach
+            for (int x = 0; x < Players.Count; x++ )
+// ReSharper restore ForCanBeConvertedToForeach
             {
-                string ins = GeneratePacket(p, TronInstruction.AddToGrid, curx, _gr.Height/2);
+                Player p = Players[x];
+                string ins = GeneratePacket(p, TronInstruction.AddToGrid, curx, _gr.Height / 2);
                 Parse(ins);
                 Send(ins);
-                
+
                 p.XPos = curx;
-                p.YPos = _gr.Height/2;
+                p.YPos = _gr.Height / 2;
                 curx += gap;
             }
+            Send(GeneratePacket(MainWindow.MePlayer, TronInstruction.InitComplete, MainWindow.MePlayer.XPos,
+                                MainWindow.MePlayer.YPos));
             FireOnInitCompleteEvent();
         }
         void server_OnClientDisconnect(object sender, ClientEventArgs e)
@@ -168,14 +190,16 @@ namespace Netron
 
         void server_OnClientConnect(object sender, ClientEventArgs e)
         {
+            if (_hasFinalized) return;
             if (Tcs == TronCommunicatorStatus.Master)
             {
                 var player = new Player(Players.Count);
                 Players.Add(player);
                 e.Client.Tag = player.PlayerNum;
                 Console.WriteLine("Waiting 100 milliseconds for client");
-                Thread.Sleep(100);
+                
                 e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum + "\n");
+                Thread.Sleep(100);
                 e.Client.SendData(GeneratePacket(MainWindow.MePlayer, TronInstruction.DoNothing, MainWindow.MePlayer.XPos,
                                                  MainWindow.MePlayer.YPos) + "\n");
                 Console.WriteLine("Player joined!");
@@ -211,6 +235,11 @@ namespace Netron
             else
             {
                 var whattodo = (TronInstruction) Int32.Parse(strs[0]);
+                /*if (whattodo == TronInstruction.InitComplete)
+                {
+                    FireOnInitCompleteEvent();
+                    return;
+                }*/
                 var xcoord = Int32.Parse(strs[1]);
                 var ycoord = Int32.Parse(strs[2]);
                 var type = (TronType) Int32.Parse(strs[3]);
