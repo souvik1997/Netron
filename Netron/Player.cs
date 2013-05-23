@@ -63,13 +63,37 @@ namespace Netron
                            };
             return p;
         }
-        public void AcceptUserInput(DirectionType toTurn)
+        public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {
             //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));
             if (Dead) return;
+            if (!broadcast)
+            {
+                MainWindow.NextTurns.Enqueue(toTurn);
+                return;
+            }
             if (toTurn != Direction && toTurn != (DirectionType)(((int)Direction+180)%360))
                 Turn(toTurn);
-            MainWindow.Comm.Send(MainWindow.Comm.GeneratePacket(this, TronInstruction.DoNothing, XPos, YPos));
+            if (broadcast)
+            {
+                string packet = null;
+                switch (toTurn)
+                {
+                    case DirectionType.East:
+                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnRight, XPos, YPos);
+                        break;
+                    case DirectionType.West:
+                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnLeft, XPos, YPos);
+                        break;
+                    case DirectionType.North:
+                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnUp, XPos, YPos);
+                        break;
+                    case DirectionType.South:
+                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnDown, XPos, YPos);
+                        break;
+                }
+                MainWindow.Comm.Send(packet);
+            }
         }
 #pragma warning disable 659
         public override bool Equals(object obj)
@@ -124,7 +148,7 @@ namespace Netron
             
             int oldx = XPos;
             int oldy = YPos;
-            
+            Console.WriteLine("Turning from {0} to {1}", olddir, newDir);
             MoveForwardIfAbleTo();
             Wall wl = null;
             if ((olddir == DirectionType.North && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.South))

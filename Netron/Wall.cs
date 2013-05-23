@@ -37,6 +37,10 @@ namespace Netron
                         WallBR = _owallBR
                     };
         }
+        public Wall(Color c):this()
+        {
+            Color = c; 
+        }
         
         public override TronType GetTronType()
         {
@@ -81,7 +85,7 @@ namespace Netron
         }
 
         private Color _color;
-        public override Color Color 
+        public override sealed Color Color 
         { 
             get { return _color; }
             set

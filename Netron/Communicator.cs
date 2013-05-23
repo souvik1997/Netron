@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using System.Net.Sockets;
 using ServerFramework.NET;
@@ -19,7 +20,7 @@ namespace Netron
      */ 
     public enum TronInstruction
     {
-        AddToGrid = 0x01, MoveEntity = 0x02, RemoveFromGrid = 0x03, DoNothing = 0x04, ChangePlayerNum=0x05, Connect=0x06, AddAndThenMoveEntity=0x07, InitComplete=0x08, InstructionEnd = '\n'
+        AddToGrid, MoveEntity, RemoveFromGrid, DoNothing, ChangePlayerNum, Connect, AddAndThenMoveEntity, InitComplete, TurnLeft, TurnRight, TurnUp, TurnDown, InstructionEnd = '\n'
     }
     public enum TronCommunicatorStatus
     {
@@ -168,7 +169,7 @@ namespace Netron
                 p.YPos = _gr.Height / 2;
                 curx += gap;
             }
-            Send(GeneratePacket(MainWindow.MePlayer,TronInstruction.InitComplete,0,0));
+            Send(GeneratePacket(MainWindow.MePlayer,TronInstruction.InitComplete,MainWindow.MePlayer.XPos,MainWindow.MePlayer.YPos));
             FireOnInitCompleteEvent();
         }
         void server_OnClientDisconnect(object sender, ClientEventArgs e)
@@ -191,10 +192,12 @@ namespace Netron
             if (_hasFinalized) return;
             if (Tcs == TronCommunicatorStatus.Master)
             {
-                var player = new Player(Players.Count);
+                int color = (new Random()).Next(255*255*255);
+                var player = new Player(Players.Count) {Color = Color.FromArgb(color)};
                 Players.Add(player);
                 e.Client.Tag = player.PlayerNum;                
                 e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum + (char)TronInstruction.InstructionEnd);
+                e.Client.SendData(GeneratePacket(player, TronInstruction.DoNothing, player.XPos, player.YPos));
                 Console.WriteLine("Player joined!");
             }
 // ReSharper disable ForCanBeConvertedToForeach
@@ -251,11 +254,14 @@ namespace Netron
                             var player = Player.Deserialize(strs[4]);
 
                             if (player.PlayerNum == MainWindow.MePlayer.PlayerNum)
+                            {
+                                MainWindow.MePlayer.Color = player.Color;   
                                 _gr.Exec(whattodo, xcoord, ycoord, MainWindow.MePlayer);
+                            }
                             else
                             {
                                 bool found = false;
-                                for(int x = 0; x < Players.Count; x++)
+                                for (int x = 0; x < Players.Count; x++)
                                 {
                                     if (Players[x].PlayerNum == player.PlayerNum)
                                     {
@@ -267,7 +273,7 @@ namespace Netron
                                 if (!found)
                                 {
                                     Players.Add(player);
-                                    Console.WriteLine("Adding new player: {0}",player.PlayerNum);
+                                    Console.WriteLine("Adding new player: {0}", player.PlayerNum);
                                     if (player.PlayerNum == 0) Console.WriteLine("This is the MASTER player");
                                 }
                                 _gr.Exec(whattodo, xcoord, ycoord, player);
@@ -311,14 +317,14 @@ namespace Netron
             }
         }
 
-        public string GeneratePacket(TronBase te, TronInstruction instr, int x, int y)
+        public string GeneratePacket(TronBase te, TronInstruction instr, int arg1, int arg2)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append((byte)instr);
             sb.Append(Separator);
-            sb.Append(x);
+            sb.Append(arg1);
             sb.Append(Separator);
-            sb.Append(y);
+            sb.Append(arg2);
             sb.Append(Separator);
             sb.Append((int) te.GetTronType());
             sb.Append(Separator);

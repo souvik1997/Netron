@@ -87,18 +87,40 @@ namespace Netron
         }
         public void Exec(TronInstruction ti, int x, int y, TronBase tb)
         {
+            /* TODO: Fix this */
             if (!tb.IsInGrid) tb.PutSelfInGrid(this, x, y);
+            Player p = tb as Player;
             switch (ti)
             {
                 case TronInstruction.AddToGrid:
                     tb.PutSelfInGrid(this, x, y);
+                    return;
                     break;
                 case TronInstruction.MoveEntity:
-                    tb.MoveTo(x,y);
+                    tb.MoveTo(x, y);
+                    return;
                     break;
                 case TronInstruction.RemoveFromGrid:
                     tb.RemoveFromGrid();
+                    return;
                     break;
+            }
+            if (p == null) return;
+            switch (ti)
+            {
+                case TronInstruction.TurnLeft:
+                    p.AcceptUserInput(TronBase.DirectionType.West,false);
+                    break;
+                case TronInstruction.TurnRight:
+                    p.AcceptUserInput(TronBase.DirectionType.East, false);
+                    break;
+                case TronInstruction.TurnDown:
+                    p.AcceptUserInput(TronBase.DirectionType.South, false);
+                    break;
+                case TronInstruction.TurnUp:
+                    p.AcceptUserInput(TronBase.DirectionType.North, false);
+                    break;
+
             }
         }
     }

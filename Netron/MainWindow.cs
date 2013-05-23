@@ -25,7 +25,7 @@ namespace Netron
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
 
-        private volatile TronBase.DirectionType _nextTurn;
+        public static volatile Queue<TronBase.DirectionType> NextTurns = new Queue<TronBase.DirectionType>();
         public MainWindow()
         {
             InitializeComponent();
@@ -42,17 +42,16 @@ namespace Netron
             _gMain = Graphics.FromImage(gameWindow.Image);
             _gWall = Graphics.FromImage(_bWall);
             _gPlayers = Graphics.FromImage(_bPlayers);
-            _nextTurn = TronBase.DirectionType.Null;
         }
 
         private void bw_DoWork(object sender, DoWorkEventArgs e)
         {
             for (int x = 0; x < 1000; x++)
             {
-                if (_nextTurn != TronBase.DirectionType.Null)
+                if (NextTurns.Count > 0)
                 {
-                    MePlayer.AcceptUserInput(_nextTurn);
-                    _nextTurn = TronBase.DirectionType.Null;
+                    var dir = NextTurns.Dequeue();
+                    MePlayer.AcceptUserInput(dir);
                 }
                 foreach (Player player in Comm.Players)
                     player.Act();
@@ -202,22 +201,22 @@ namespace Netron
         {
             if (e.KeyCode == Keys.A)
             {
-                _nextTurn = TronBase.DirectionType.West;
+                NextTurns.Enqueue(TronBase.DirectionType.West);
                 //MePlayer.AcceptUserInput(TronBase.DirectionType.West);
             }
             else if (e.KeyCode == Keys.D)
             {
-                _nextTurn = TronBase.DirectionType.East;
+                NextTurns.Enqueue(TronBase.DirectionType.East);
                 //MePlayer.AcceptUserInput(TronBase.DirectionType.East);
             }
             else if (e.KeyCode == Keys.S)
             {
-                _nextTurn = TronBase.DirectionType.South;
+                NextTurns.Enqueue(TronBase.DirectionType.South);
                 //MePlayer.AcceptUserInput(TronBase.DirectionType.South);
             }
             else if (e.KeyCode == Keys.W)
             {
-                _nextTurn = TronBase.DirectionType.North;
+                NextTurns.Enqueue(TronBase.DirectionType.North);
                 //MePlayer.AcceptUserInput(TronBase.DirectionType.North);
             }
         }
