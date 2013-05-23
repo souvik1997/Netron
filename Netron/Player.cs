@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Text;
-
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 namespace Netron
 {
     public class Player : TronBase
@@ -15,7 +16,11 @@ namespace Netron
         {
             return TronType.Player;
         }
-
+        public DirectionType NextTurn
+        {
+            get;
+            set;
+        }
         private readonly Bitmap _oimage;
         public override sealed Bitmap Image { get; set; }
 
@@ -29,6 +34,7 @@ namespace Netron
             PlayerNum = num;
             _oimage = Properties.Resources.TronLightcycleFinal;
             Image = _oimage;
+            NextTurn = DirectionType.Null;
         }
 
         
@@ -63,17 +69,17 @@ namespace Netron
                            };
             return p;
         }
+        public void FlushTurns()
+        {
+            if (NextTurn == DirectionType.Null) return;
+            if (NextTurn != Direction && NextTurn != (DirectionType)(((int)Direction + 180) % 360))
+                Turn(NextTurn);
+        }
         public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {
             //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));
             if (Dead) return;
-            if (!broadcast)
-            {
-                MainWindow.NextTurns.Enqueue(toTurn);
-                return;
-            }
-            if (toTurn != Direction && toTurn != (DirectionType)(((int)Direction+180)%360))
-                Turn(toTurn);
+            NextTurn = toTurn;
             if (broadcast)
             {
                 string packet = null;
@@ -126,7 +132,17 @@ namespace Netron
                 {
                     Wall wl = new Wall {Direction = Direction, Color = Color};
                     wl.PutSelfInGrid(Grid, oldx, oldy);
-                    MainWindow.Walls.Add(wl);
+                    int x = 0;
+                    for (x = 0; x < MainWindow.Walls.Count; x++)
+                    {
+                        if (MainWindow.Walls[x].XPos == wl.XPos && MainWindow.Walls[x].YPos == wl.YPos)
+                        {
+                            MainWindow.Walls[x] = wl;
+                            break;
+                        }
+                    }
+                    if (x >= MainWindow.Walls.Count)
+                        MainWindow.Walls.Add(wl);
                 }
                 else
                 {

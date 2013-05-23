@@ -25,11 +25,11 @@ namespace Netron
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
 
-        public static volatile Queue<TronBase.DirectionType> NextTurns = new Queue<TronBase.DirectionType>();
+        
         public MainWindow()
         {
             InitializeComponent();
-            _gr = new Grid(70, 50);
+            _gr = new Grid(20, 20);
             _bw = new BackgroundWorker();
             _bw.DoWork += bw_DoWork;
             MePlayer = new Player(0) {Color = Color.Tomato};
@@ -48,15 +48,21 @@ namespace Netron
         {
             for (int x = 0; x < 1000; x++)
             {
-                if (NextTurns.Count > 0)
+                if (Comm.Tcs == TronCommunicatorStatus.Master)
                 {
-                    var dir = NextTurns.Dequeue();
-                    MePlayer.AcceptUserInput(dir);
+                    Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos));
                 }
+                Comm.SyncComplete.WaitOne();
+
                 foreach (Player player in Comm.Players)
+                {
+                    player.FlushTurns();
+                    
                     player.Act();
+                }
                 Draw();
                 Thread.Sleep(100);
+                
             }
         }
 
@@ -88,6 +94,7 @@ namespace Netron
 
 
                         Bitmap icon = resize(tb.Image, (int) _cellWidth + 1, (int) _cellHeight + 1);
+                        //_gWall.FillRectangle(new SolidBrush(gameWindow.BackColor), (int)Math.Round(x)+1, (int)Math.Round(y)+1, (int)_cellWidth , (int)_cellHeight);
                         _gWall.DrawImage(icon,
                                          new PointF((int) Math.Round(x), (int) Math.Round(y)));
                     }
@@ -201,23 +208,19 @@ namespace Netron
         {
             if (e.KeyCode == Keys.A)
             {
-                NextTurns.Enqueue(TronBase.DirectionType.West);
-                //MePlayer.AcceptUserInput(TronBase.DirectionType.West);
+                MePlayer.AcceptUserInput(TronBase.DirectionType.West);
             }
             else if (e.KeyCode == Keys.D)
             {
-                NextTurns.Enqueue(TronBase.DirectionType.East);
-                //MePlayer.AcceptUserInput(TronBase.DirectionType.East);
+                MePlayer.AcceptUserInput(TronBase.DirectionType.East);
             }
             else if (e.KeyCode == Keys.S)
             {
-                NextTurns.Enqueue(TronBase.DirectionType.South);
-                //MePlayer.AcceptUserInput(TronBase.DirectionType.South);
+                MePlayer.AcceptUserInput(TronBase.DirectionType.South);
             }
             else if (e.KeyCode == Keys.W)
             {
-                NextTurns.Enqueue(TronBase.DirectionType.North);
-                //MePlayer.AcceptUserInput(TronBase.DirectionType.North);
+                MePlayer.AcceptUserInput(TronBase.DirectionType.North);
             }
         }
 

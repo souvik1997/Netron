@@ -5,6 +5,7 @@ using System.Text;
 using System.Net.Sockets;
 using ServerFramework.NET;
 using System.IO;
+using System.Threading;
 using Timer = System.Timers.Timer;
 
 namespace Netron
@@ -20,7 +21,7 @@ namespace Netron
      */ 
     public enum TronInstruction
     {
-        AddToGrid, MoveEntity, RemoveFromGrid, DoNothing, ChangePlayerNum, Connect, AddAndThenMoveEntity, InitComplete, TurnLeft, TurnRight, TurnUp, TurnDown, InstructionEnd = '\n'
+        AddToGrid, MoveEntity, RemoveFromGrid, DoNothing, ChangePlayerNum, Connect, AddAndThenMoveEntity, InitComplete, TurnLeft, TurnRight, TurnUp, TurnDown, SyncToClient, SyncToServer, InstructionEnd = '\n'
     }
     public enum TronCommunicatorStatus
     {
@@ -33,7 +34,14 @@ namespace Netron
         public event CommunicatorEventHandler OnPlayerDisconnect;
         public event CommunicatorEventHandler OnInitComplete;
         public event CommunicatorEventHandler OnInitTimerTick;
+        private event CommunicatorEventHandler OnSyncComplete;
 
+        public AutoResetEvent SyncComplete;
+        protected virtual void FireOnSyncCompleteEvent()
+        {
+            if (OnSyncComplete != null)
+                OnSyncComplete(this, new EventArgs());
+        }
         protected virtual void FireOnNewPlayerConnectEvent()
         {
             if (OnNewPlayerConnect != null)
@@ -107,7 +115,14 @@ namespace Netron
                                                   _serverConnectionStream);
                
             }
+            OnSyncComplete += new CommunicatorEventHandler(Communicator_OnSyncComplete);
+            SyncComplete = new AutoResetEvent(false);
             Console.WriteLine("Running as " + Tcs);
+        }
+
+        void Communicator_OnSyncComplete(object sender, EventArgs e)
+        {
+            SyncComplete.Set();
         }
         private void ServerConnectionStreamOnRead(IAsyncResult iar)
         {
@@ -227,6 +242,7 @@ namespace Netron
         void Parse(byte[] instr)
         {
             if (instr.Length < 2) return;
+            SyncComplete.Reset();
             string str = Encoding.ASCII.GetString(instr);
             Console.WriteLine("Received {0}", str);
             string[] strs = str.Split(Separator);
@@ -240,13 +256,23 @@ namespace Netron
                 MainWindow.MePlayer.PlayerNum = Int32.Parse(strs[1]);
                 Console.WriteLine("Changing player number to " + MainWindow.MePlayer.PlayerNum);
             }
+            else if (whattodo == TronInstruction.SyncToClient)
+            {
+                Send(GeneratePacket(MainWindow.MePlayer, TronInstruction.SyncToServer, MainWindow.MePlayer.XPos, MainWindow.MePlayer.YPos));
+
+                FireOnSyncCompleteEvent();
+            }
+            else if (whattodo == TronInstruction.SyncToServer)
+            {
+                FireOnSyncCompleteEvent();
+            }
             else
             {
-                
-                
+
+
                 var xcoord = Int32.Parse(strs[1]);
                 var ycoord = Int32.Parse(strs[2]);
-                var type = (TronType) Int32.Parse(strs[3]);
+                var type = (TronType)Int32.Parse(strs[3]);
                 switch (type)
                 {
                     case TronType.Player:
@@ -255,7 +281,7 @@ namespace Netron
 
                             if (player.PlayerNum == MainWindow.MePlayer.PlayerNum)
                             {
-                                MainWindow.MePlayer.Color = player.Color;   
+                                MainWindow.MePlayer.Color = player.Color;
                                 _gr.Exec(whattodo, xcoord, ycoord, MainWindow.MePlayer);
                             }
                             else
@@ -277,6 +303,8 @@ namespace Netron
                                     if (player.PlayerNum == 0) Console.WriteLine("This is the MASTER player");
                                 }
                                 _gr.Exec(whattodo, xcoord, ycoord, player);
+                                if (Tcs == TronCommunicatorStatus.Master)
+                                    Send(instr, player.PlayerNum);
                             }
                         }
                         break;
@@ -290,11 +318,11 @@ namespace Netron
             }
 
         }
-        public void Send(string tosend)
+        public void Send(string tosend, int ignore = -1)
         {
-            Send(GetBytes(tosend));
+            Send(GetBytes(tosend), ignore);
         }
-        public void Send(byte[] buf)
+        public void Send(byte[] buf, int ignore = -1)
         {
             switch (Tcs)
             {
@@ -308,7 +336,8 @@ namespace Netron
                 case TronCommunicatorStatus.Master:
                     foreach(Client c in _server.ConnectedClients)
                     {
-                        c.SendData(buf);
+                        if ((int)c.Tag != ignore)
+                            c.SendData(buf);
                         /*if (buf[buf.Length - 1] != (byte)'\n')
                             c.SendData(new[] {(byte) '\n'});*/
                     }
