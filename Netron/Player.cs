@@ -5,77 +5,77 @@ using System.Text;
 
 namespace Netron
 {
-    public class Player : TronBase
+    public class Player : TronBase //Player inherits from TronBase
     {
-        public int PlayerNum
+        public int PlayerNum //Property for player number
         {
             get;
             set;
         }
-        public override TronType GetTronType()
+        public override TronType GetTronType() //Override tron type
         {
             return TronType.Player;
         }
-        public DirectionType NextTurn
+        public DirectionType NextTurn //Property for next turn
         {
             get;
             set;
         }
-        private readonly Bitmap _oimage;
-        public override sealed Bitmap Image { get; set; }
+        private readonly Bitmap _oimage; //readonly image for icon
+        public override sealed Bitmap Image { get; set; } //Sealed property for the image
 
-        public bool Dead
+        public bool Dead //Property for if the player is dead
         {
             get;
-            private set;
+            set;
         }
-        public Player(int num)
+        public Player(int num) //Constructor
         {
-            PlayerNum = num;
-            _oimage = Properties.Resources.TronLightcycleFinal;
-            Image = _oimage;
-            NextTurn = DirectionType.Null;
+            PlayerNum = num; //store player umber
+            _oimage = Properties.Resources.TronLightcycleFinal; //Load image from resources
+            Image = _oimage; //store image property
+            NextTurn = DirectionType.Null; //set next turn to a null direction
         }
 
         
-        public override string Serialize()
+        public override string Serialize() //Serialize the object
         {
-            StringBuilder sb = new StringBuilder(base.Serialize()+",");
-            sb.Append(PlayerNum);
-            return sb.ToString();
+            StringBuilder sb = new StringBuilder(base.Serialize()+","); //get the superclass serialization
+            sb.Append(PlayerNum); //append the player number
+            return sb.ToString(); //return string
         }
 
-        private Color _color;
-        public override Color Color
+        private Color _color; //private variable for color
+        public override Color Color //Property for color
         {
-            get { return _color; }
+            get { return _color; } //Accessor returns color
             set
             {
-                _color = value;
-                Image = TintBitmap(_oimage, value);
+                _color = value; //Set backing variable to value
+                Image = TintBitmap(_oimage, value); //Tint image to the color
             }
         }
 
-        public static Player Deserialize(string str)
+        public static Player Deserialize(string str) //Deserialize a string to a player
         {
             
-            var strs = str.Split(',');
-            Player p = new Player(Int32.Parse(strs[4]))
+            var strs = str.Split(','); //split string
+            Player p = new Player(Int32.Parse(strs[4])) //create player with player number, xpos, ypos, direction, and color
                            {
                                XPos = Int32.Parse(strs[0]),
                                YPos = Int32.Parse(strs[1]),
                                Direction = (DirectionType) Int32.Parse(strs[2]),
                                Color = Color.FromArgb(Int32.Parse(strs[3])),
                            };
-            return p;
+            return p; //return player
         }
-        public bool FlushTurns()
+        public bool FlushTurns() //Flush pending turns. Returns false if no turns were flushed
         {
-            if (NextTurn == DirectionType.Null) return false;
+            if (NextTurn == DirectionType.Null) return false; //no turn
             if (NextTurn != Direction && NextTurn != (DirectionType)(((int)Direction + 180) % 360))
-                Turn(NextTurn);
+                Turn(NextTurn); //turn if the direction changes
             NextTurn = DirectionType.Null;
-            return true;
+            return true; //
         }
         public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {

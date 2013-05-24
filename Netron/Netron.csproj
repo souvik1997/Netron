@@ -53,7 +53,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Communicator.cs" />
-    <Compile Include="Drawable.cs" />
     <Compile Include="Grid.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
