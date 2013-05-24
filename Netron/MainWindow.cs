@@ -1,8 +1,9 @@
-﻿#define DRAW_GRID
+﻿//#define DRAW_GRID
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -25,11 +26,11 @@ namespace Netron
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
 
-        
+        private const int SleepInterval = 10;
         public MainWindow()
         {
             InitializeComponent();
-            _gr = new Grid(20, 20);
+            _gr = new Grid(200, 160);
             _bw = new BackgroundWorker();
             _bw.DoWork += bw_DoWork;
             MePlayer = new Player(0) {Color = Color.Tomato};
@@ -48,21 +49,22 @@ namespace Netron
         {
             for (int x = 0; x < 1000; x++)
             {
+                
                 if (Comm.Tcs == TronCommunicatorStatus.Master)
                 {
                     Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos));
                 }
+                Debug.WriteLine("Waiting for sync");
                 Comm.SyncComplete.WaitOne();
-
+                Debug.WriteLine("Sync complete");
                 foreach (Player player in Comm.Players)
                 {
-                    player.FlushTurns();
-                    
-                    player.Act();
+                    if (!player.FlushTurns())
+                        player.Act();
                 }
                 Draw();
-                Thread.Sleep(100);
-                
+                Thread.Sleep(SleepInterval);
+                toolStripStatusLabel1.Text = "Frame number " + x;
             }
         }
 
@@ -113,6 +115,20 @@ namespace Netron
                                             new PointF((int) Math.Round(x), (int) Math.Round(y)));
                     }
                 }
+                /*foreach(TronBase tb in _gr.Map)
+                {
+                    if (tb != null && tb.Image != null)
+                    {
+                        float x = tb.XPos * _cellWidth;
+                        float y = tb.YPos * _cellHeight;
+
+
+                        Bitmap icon = resize(tb.Image, (int)_cellWidth + 1, (int)_cellHeight + 1);
+                        _gPlayers.DrawImage(icon,
+                                            new PointF((int)Math.Round(x), (int)Math.Round(y)));
+                    }
+
+                }*/
                 _gMain.DrawImage(_bWall, 0, 0);
                 _gMain.DrawImage(_bPlayers, 0, 0);
                 
@@ -132,7 +148,7 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Caught exception {0}", e.Message);
+                    Debug.WriteLine("Caught exception {0}", e.Message);
                 }
             }
             else
@@ -140,7 +156,7 @@ namespace Netron
                 gameWindow.Refresh();
             }
         }
-
+        
         private static Bitmap resize(Bitmap src, int width, int height)
         {
             var result = new Bitmap(width, height);
@@ -168,10 +184,6 @@ namespace Netron
         void Comm_OnInitTimerTick(object sender, EventArgs e)
         {
             toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left";
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
         }
 
         private void connectToServerToolStripMenuItem_Click(object sender, EventArgs e)

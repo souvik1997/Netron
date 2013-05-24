@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using System.Net.Sockets;
@@ -115,9 +116,9 @@ namespace Netron
                                                   _serverConnectionStream);
                
             }
-            OnSyncComplete += new CommunicatorEventHandler(Communicator_OnSyncComplete);
+            OnSyncComplete += Communicator_OnSyncComplete;
             SyncComplete = new AutoResetEvent(false);
-            Console.WriteLine("Running as " + Tcs);
+            Debug.WriteLine("Running as " + Tcs);
         }
 
         void Communicator_OnSyncComplete(object sender, EventArgs e)
@@ -135,20 +136,20 @@ namespace Netron
                 while (stream.DataAvailable)
                 {
                     int b = stream.ReadByte();
-                    Console.Write(b+",");
+                    Debug.Write(b+",");
                     if (b != (byte)TronInstruction.InstructionEnd)
                         list.Add((byte)b);
                     else
                         break;
                 }
-                Console.WriteLine("\n");
+                Debug.WriteLine("\n");
                 Parse(list.ToArray());
                 _serverConnectionStream.BeginRead(new byte[0], 0, 0, ServerConnectionStreamOnRead,
                                                   _serverConnectionStream);
             }
             catch (IOException e)
             {
-                Console.WriteLine("Caught exception: {0}", e.Message);
+                Debug.Print("Caught exception: {0}", e.Message);
             }
             
         }
@@ -168,7 +169,7 @@ namespace Netron
         {
             _hasFinalized = true;
             if (Players.Count == 0) return;
-            Console.WriteLine("Finalizing connections");
+            Debug.WriteLine("Finalizing connections");
             int gap = _gr.Width/Players.Count;
             int curx = 0;
 // ReSharper disable ForCanBeConvertedToForeach
@@ -194,7 +195,7 @@ namespace Netron
                 if (Players[x].PlayerNum == (int)e.Client.Tag)
                 {
                     Players.RemoveAt(x);
-                    Console.WriteLine("Player " + x + " removed");
+                    Debug.WriteLine("Player " + x + " removed");
                     /* TODO: Add code to "suspend" player */
                     return;
                 }
@@ -213,7 +214,7 @@ namespace Netron
                 e.Client.Tag = player.PlayerNum;                
                 e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum + (char)TronInstruction.InstructionEnd);
                 e.Client.SendData(GeneratePacket(player, TronInstruction.DoNothing, player.XPos, player.YPos));
-                Console.WriteLine("Player joined!");
+                Debug.WriteLine("Player joined!");
             }
 // ReSharper disable ForCanBeConvertedToForeach
             for (int x = 0; x < Players.Count; x++)
@@ -223,7 +224,7 @@ namespace Netron
                 string ins = GeneratePacket(p, TronInstruction.AddToGrid, p.XPos, p.YPos);
                 e.Client.SendData(ins);
             }
-            Console.WriteLine("Connection!");
+            Debug.WriteLine("Connection!");
             FireOnNewPlayerConnectEvent();
         }
 
@@ -244,7 +245,7 @@ namespace Netron
             if (instr.Length < 2) return;
             SyncComplete.Reset();
             string str = Encoding.ASCII.GetString(instr);
-            Console.WriteLine("Received {0}", str);
+            Debug.Print("Received {0}", str);
             string[] strs = str.Split(Separator);
             var whattodo = (TronInstruction)Int32.Parse(strs[0]);
             if (whattodo == TronInstruction.InitComplete)
@@ -254,7 +255,7 @@ namespace Netron
             else if (whattodo == TronInstruction.ChangePlayerNum)
             {
                 MainWindow.MePlayer.PlayerNum = Int32.Parse(strs[1]);
-                Console.WriteLine("Changing player number to " + MainWindow.MePlayer.PlayerNum);
+                Debug.WriteLine("Changing player number to " + MainWindow.MePlayer.PlayerNum);
             }
             else if (whattodo == TronInstruction.SyncToClient)
             {
@@ -299,8 +300,8 @@ namespace Netron
                                 if (!found)
                                 {
                                     Players.Add(player);
-                                    Console.WriteLine("Adding new player: {0}", player.PlayerNum);
-                                    if (player.PlayerNum == 0) Console.WriteLine("This is the MASTER player");
+                                    Debug.Print("Adding new player: {0}", player.PlayerNum);
+                                    if (player.PlayerNum == 0) Debug.WriteLine("This is the MASTER player");
                                 }
                                 _gr.Exec(whattodo, xcoord, ycoord, player);
                                 if (Tcs == TronCommunicatorStatus.Master)

@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.gameWindow = new System.Windows.Forms.PictureBox();
-            this.button1 = new System.Windows.Forms.Button();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.connectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.connectToServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,22 +43,12 @@
             // 
             // gameWindow
             // 
-            this.gameWindow.Location = new System.Drawing.Point(252, 27);
+            this.gameWindow.Location = new System.Drawing.Point(12, 27);
             this.gameWindow.Name = "gameWindow";
-            this.gameWindow.Size = new System.Drawing.Size(616, 370);
+            this.gameWindow.Size = new System.Drawing.Size(648, 277);
             this.gameWindow.TabIndex = 0;
             this.gameWindow.TabStop = false;
             this.gameWindow.Click += new System.EventHandler(this.gameWindow_Click);
-            // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(12, 35);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(234, 27);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Start";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // menuStrip1
             // 
@@ -68,7 +57,7 @@
             this.logToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(880, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(668, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -105,9 +94,9 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 400);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 308);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(880, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(668, 22);
             this.statusStrip1.TabIndex = 3;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -120,9 +109,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(880, 422);
+            this.ClientSize = new System.Drawing.Size(668, 330);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.button1);
             this.Controls.Add(this.gameWindow);
             this.Controls.Add(this.menuStrip1);
             this.KeyPreview = true;
@@ -144,7 +132,6 @@
         #endregion
 
         private System.Windows.Forms.PictureBox gameWindow;
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem connectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem connectToServerToolStripMenuItem;

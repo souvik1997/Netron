@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Collections.Generic;
 namespace Netron
@@ -95,7 +96,7 @@ namespace Netron
                     _ics = IconSets[value];
                 else
                 {
-                    Console.WriteLine("*");
+                    Debug.WriteLine("*");
                     _ics = new IconSet
                               {
                                   WallNS = TintBitmap(_owallNS, value),

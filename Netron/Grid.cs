@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿using System.Collections.Generic;
 
 namespace Netron
 {
@@ -13,11 +11,11 @@ namespace Netron
         }
         public int Width
         {
-            get { return (int)Map.GetLength(1); }
+            get { return Map.GetLength(1); }
         }
         public int Height
         {
-            get { return (int)Map.GetLength(0); }
+            get { return Map.GetLength(0); }
         }
         public Grid(int width, int height)
         {
@@ -95,15 +93,12 @@ namespace Netron
                 case TronInstruction.AddToGrid:
                     tb.PutSelfInGrid(this, x, y);
                     return;
-                    break;
                 case TronInstruction.MoveEntity:
                     tb.MoveTo(x, y);
                     return;
-                    break;
                 case TronInstruction.RemoveFromGrid:
                     tb.RemoveFromGrid();
                     return;
-                    break;
             }
             if (p == null) return;
             switch (ti)

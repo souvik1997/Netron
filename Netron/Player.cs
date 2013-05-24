@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Text;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+
 namespace Netron
 {
     public class Player : TronBase
@@ -69,11 +69,13 @@ namespace Netron
                            };
             return p;
         }
-        public void FlushTurns()
+        public bool FlushTurns()
         {
-            if (NextTurn == DirectionType.Null) return;
+            if (NextTurn == DirectionType.Null) return false;
             if (NextTurn != Direction && NextTurn != (DirectionType)(((int)Direction + 180) % 360))
                 Turn(NextTurn);
+            NextTurn = DirectionType.Null;
+            return true;
         }
         public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {
@@ -126,6 +128,7 @@ namespace Netron
             lock (_actLock)
             {
                 if (Dead) return;
+                FlushTurns();
                 int oldx = XPos;
                 int oldy = YPos;
                 if (MoveForwardIfAbleTo())
@@ -164,7 +167,7 @@ namespace Netron
             
             int oldx = XPos;
             int oldy = YPos;
-            Console.WriteLine("Turning from {0} to {1}", olddir, newDir);
+            Debug.Print("Turning from {0} to {1}", olddir, newDir);
             MoveForwardIfAbleTo();
             Wall wl = null;
             if ((olddir == DirectionType.North && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.South))
