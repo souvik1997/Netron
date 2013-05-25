@@ -31,7 +31,7 @@ namespace Netron
     //Status of this communicator instance
     public enum TronCommunicatorStatus
     {
-        Master, Slave
+        Server, Client
     }
 
     /*          [Client]    [Client]
@@ -83,7 +83,7 @@ namespace Netron
                 OnInitComplete(this, new EventArgs());
         }
         public TronCommunicatorStatus Tcs; //Status of this communicator
-        private readonly string _masterIP; //Stores the IP address of the master player
+        private readonly string _serverIP; //Stores the IP address of the Server player
         public List<Player> Players //List of all players in the game
         {
             get; //Define accessor and setter through auto-property
@@ -101,20 +101,20 @@ namespace Netron
         public const char Separator = ';'; //Constant to separate parts of a message
         public const int Port = 1337; //Port to use for communication
 
-        private readonly TcpClient _serverConnection; // Used by slave Communicators instead of a TCP server
+        private readonly TcpClient _serverConnection; // Used by Client Communicators instead of a TCP server
         private readonly NetworkStream _serverConnectionStream;
 
         private bool _hasFinalized; //Set if init is complete
-        public Communicator(Grid gr, string masterIP = null) //Constructor with optional parameter
+        public Communicator(Grid gr, string serverIP = null) //Constructor with optional parameter
         {
             
-            _masterIP = masterIP; // Store to instance variable
+            _serverIP = serverIP; // Store to instance variable
             _gr = gr;
             
             Players = new List<Player> {MainWindow.MePlayer}; //Create a new List with a collection initializer 
-            Tcs = masterIP == null ? TronCommunicatorStatus.Master : TronCommunicatorStatus.Slave; //If masterip is null, then it is a slave. Otherwise it is a master
+            Tcs = serverIP == null ? TronCommunicatorStatus.Server : TronCommunicatorStatus.Client; //If Serverip is null, then it is a Client. Otherwise it is a Server
 
-            if (Tcs == TronCommunicatorStatus.Master) //If this is a master
+            if (Tcs == TronCommunicatorStatus.Server) //If this is a Server
             {
                 _server = new Server(Port, new List<char> { (char)TronInstruction.InstructionEnd, '\n', '\r' });  //Create TCP server with default line terminators
                 _server.OnClientConnect += server_OnClientConnect; //Set up events for the TCP server
@@ -127,10 +127,10 @@ namespace Netron
                 _timer.Start(); //Start timer
                 ElapsedTime = 0; //Set variable
             }
-            else if (masterIP != null) //If this is not a master
+            else if (serverIP != null) //If this is not a Server
             {                
                 _serverConnection = new TcpClient(); //Create TcpClient to use to communicate with server
-                _serverConnection.Connect(_masterIP, Port); //Connect to server
+                _serverConnection.Connect(_serverIP, Port); //Connect to server
                 _serverConnectionStream = _serverConnection.GetStream(); //Get network stream and store in variable
                 _serverConnectionStream.BeginRead(new byte[0], 0, 0, ServerConnectionStreamOnRead, //Begin asynchronous read with a callback
                                                   _serverConnectionStream);
@@ -171,7 +171,7 @@ namespace Netron
             {
                 Debug.Print("Caught I/O exception: {0}", e.Message);
             }
-            catch (ObjectDisposedException e)
+            catch (ObjectDisposedException)
             {
                 
             }
@@ -214,10 +214,12 @@ namespace Netron
         }
         public void Disconnect()
         {
-            if (Tcs == TronCommunicatorStatus.Master)
+            if (Tcs == TronCommunicatorStatus.Server)
             {
                 Players.Clear();
                 _server.Stop();
+                if (_timer.Enabled)
+                    _timer.Stop();
             }
             else
             {
@@ -225,7 +227,8 @@ namespace Netron
                 _serverConnectionStream.Close();
                 _serverConnection.Close();
             }
-
+            Debug.WriteLine
+                ("Disconnected!");
         }
         void server_OnClientDisconnect(object sender, ClientEventArgs e) //Called when player disconnects
         {
@@ -244,7 +247,7 @@ namespace Netron
         void server_OnClientConnect(object sender, ClientEventArgs e) //Fired when a player connects
         {
             if (_hasFinalized) return; //Return if game is already running
-            if (Tcs == TronCommunicatorStatus.Master) //If this is a master
+            if (Tcs == TronCommunicatorStatus.Server) //If this is a Server
             {
                 int color = (new Random()).Next(255*255*255); //Create random color
                 var player = new Player(Players.Count) {Color = Color.FromArgb(color)};
@@ -301,7 +304,7 @@ namespace Netron
 
                 FireOnSyncCompleteEvent(); //fire event
             }
-            else if (whattodo == TronInstruction.SyncToServer)  //When a slave player acknowledges a sync request
+            else if (whattodo == TronInstruction.SyncToServer)  //When a Client player acknowledges a sync request
             {
                 FireOnSyncCompleteEvent(); //Fire event
             }
@@ -339,11 +342,11 @@ namespace Netron
                                 {
                                     Players.Add(player); //Add player if it wasn't found in the list
                                     Debug.Print("Adding new player: {0}", player.PlayerNum);
-                                    if (player.PlayerNum == 0) Debug.WriteLine("This is the MASTER player");
+                                    if (player.PlayerNum == 0) Debug.WriteLine("This is the Server player");
                                 }
                                 _gr.Exec(whattodo, xcoord, ycoord, player); //Execute instruction
-                                if (Tcs == TronCommunicatorStatus.Master)
-                                    Send(instr, player.PlayerNum); //Send to all slaves, ignoring the player that sent it
+                                if (Tcs == TronCommunicatorStatus.Server)
+                                    Send(instr, player.PlayerNum); //Send to all Clients, ignoring the player that sent it
                             }
                         }
                         break;
@@ -365,14 +368,14 @@ namespace Netron
         {
             switch (Tcs)
             {
-                case TronCommunicatorStatus.Slave: //If this is a slave
+                case TronCommunicatorStatus.Client: //If this is a Client
                     {
 
                         //Send data to server
                         _serverConnectionStream.Write(buf, 0, buf.Length);
                     }
                     break;
-                case TronCommunicatorStatus.Master: //if this is a master
+                case TronCommunicatorStatus.Server: //if this is a Server
                     foreach(Client c in _server.ConnectedClients) //go through all players
                     {
                         if ((int)c.Tag != ignore) //ignore certain players

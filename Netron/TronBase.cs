@@ -1,6 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
+﻿using System.Drawing;
 using System.Text;
 
 namespace Netron
@@ -37,26 +35,30 @@ namespace Netron
         }
 
         public abstract Color Color { get; set; } //Property for color
+        private static readonly object _tintLock = new object();
         protected static Bitmap TintBitmap(Bitmap b, Color tintColor) //Helper method to tint a bitmap to a color
         {
-            
-            Bitmap b2 = new Bitmap(b.Width, b.Height); //Create a new bitmap
-            for (int x = 0; x < b.Width; x++) //Go through each pixel
+
+            lock (_tintLock)
             {
-                for (int y = 0; y < b.Height; y++)
+                Bitmap b2 = new Bitmap(b.Width, b.Height); //Create a new bitmap
+                for (int x = 0; x < b.Width; x++) //Go through each pixel
                 {
-                    
-                    Color src = b.GetPixel(x, y); //Get the color
-                    
-                    Color newColor = Color.FromArgb(src.A, (src.R + tintColor.R)/2, (src.G + tintColor.G)/2,
-                                                    (src.B + tintColor.B)/2); //Average source and tint colors
-                    
-                    b2.SetPixel(x, y,
-                                newColor); //Set pixel to new color
-                    
+                    for (int y = 0; y < b.Height; y++)
+                    {
+
+                        Color src = b.GetPixel(x, y); //Get the color
+
+                        Color newColor = Color.FromArgb(src.A, (src.R + tintColor.R)/2, (src.G + tintColor.G)/2,
+                                                        (src.B + tintColor.B)/2); //Average source and tint colors
+
+                        b2.SetPixel(x, y,
+                                    newColor); //Set pixel to new color
+
+                    }
                 }
+                return b2; //return the new bitmap
             }
-            return b2; //return the new bitmap
         }
         public Grid Grid //Property for the grid (Like getGrid() in GridWorld)
         {

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -26,7 +27,7 @@ namespace Netron
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
 
-        private const int SleepInterval = 100; //Constant amount of time to make the thread sleep
+        private const int SleepInterval = 80; //Constant amount of time to make the thread sleep
         public MainWindow() //Constructor
         {
             InitializeComponent(); //Initialize WinForms
@@ -67,7 +68,7 @@ namespace Netron
             while (!worker.CancellationPending)
             {
                 
-                if (Comm.Tcs == TronCommunicatorStatus.Master) //If this is a master
+                if (Comm.Tcs == TronCommunicatorStatus.Server) //If this is a server
                 {
                     Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos)); //Synchronize
                 }
@@ -76,9 +77,10 @@ namespace Netron
                 {
                     if (!worker.CancellationPending)
                     {
+                        string peer = Comm.Tcs == TronCommunicatorStatus.Server ? "client" : "server";
                         MessageBox.Show(
-                            "Waited for 2000 milliseconds without any response from server. Disconnecting...",
-                            "The server has disconnected.");
+                            "Waited for 2000 milliseconds without any response from"+ peer + ". Disconnecting...",
+                            "The " + peer + " has disconnected.");
                     }
                     break;
                 }
@@ -225,7 +227,16 @@ namespace Netron
             var scd = new ServerConnectionDialog(); //Show a new dialog
             scd.ShowDialog();
             if (String.IsNullOrWhiteSpace(scd.Hostname)) return;
-            Comm = new Communicator(_gr, scd.Hostname); //Create a communicator using the ip address
+            try
+            {
+                Comm = new Communicator(_gr, scd.Hostname); //Create a communicator using the ip address
+            }
+            catch (SocketException se)
+            {
+                MessageBox.Show("SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
+                Debug.Print("Caught SocketException {0}", se.Message);
+                return;
+            }
             SetupEventHandlers();
         }
 
