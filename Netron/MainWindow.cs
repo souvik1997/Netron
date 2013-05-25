@@ -26,13 +26,14 @@ namespace Netron
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
 
-        private const int SleepInterval = 10; //Constant amount of time to make the thread sleep
+        private const int SleepInterval = 100; //Constant amount of time to make the thread sleep
         public MainWindow() //Constructor
         {
             InitializeComponent(); //Initialize WinForms
             _gr = new Grid(100, 80); //Create grid
-            _bw = new BackgroundWorker(); //Create background worker
+            _bw = new BackgroundWorker {WorkerSupportsCancellation = true}; //Create background worker
             _bw.DoWork += bw_DoWork; //Set up events
+            _bw.RunWorkerCompleted += _bw_RunWorkerCompleted;
             MePlayer = new Player(0) {Color = Color.Magenta}; //Create player with color
             MePlayer.PutSelfInGrid(_gr, 2, 3); //Put player in grid
             _cellWidth = (float) gameWindow.Width/_gr.Width; //Set cell width and height
@@ -45,9 +46,25 @@ namespace Netron
             _gPlayers = Graphics.FromImage(_bPlayers);
         }
 
+        void _bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Reinitialize();
+        }
+        public void Initialize()
+        {
+            _gr.Clear();
+            MePlayer = new Player(0) { Color = Color.Magenta }; //Create player with color
+            MePlayer.PutSelfInGrid(_gr, 2, 3); //Put player in grid
+            _gMain.Clear(Color.Transparent);
+            _gWall.Clear(Color.Transparent);
+            _gPlayers.Clear(Color.Transparent);
+        }
         private void bw_DoWork(object sender, DoWorkEventArgs e) //Runs in a different thread
         {
-            for (int x = 0; x < 1000; x++) //Loop
+            BackgroundWorker worker = sender as BackgroundWorker;
+            if (worker == null) return;
+            int x = 0;
+            while (!worker.CancellationPending)
             {
                 
                 if (Comm.Tcs == TronCommunicatorStatus.Master) //If this is a master
@@ -55,7 +72,16 @@ namespace Netron
                     Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos)); //Synchronize
                 }
                 Debug.WriteLine("Waiting for sync");
-                Comm.SyncComplete.WaitOne(); //Wait for acknowledgement
+                if (!Comm.SyncComplete.WaitOne(2000, false)) //Wait for acknowledgement
+                {
+                    if (!worker.CancellationPending)
+                    {
+                        MessageBox.Show(
+                            "Waited for 2000 milliseconds without any response from server. Disconnecting...",
+                            "The server has disconnected.");
+                    }
+                    break;
+                }
                 Debug.WriteLine("Sync complete");
                 foreach (Player player in Comm.Players) //Loop through players
                 {
@@ -64,7 +90,7 @@ namespace Netron
                 }
                 Draw(); //Draw everything
                 Thread.Sleep(SleepInterval); //sleep for an amount of time
-                toolStripStatusLabel1.Text = "Frame number " + x; //Update toolstrip text
+                toolStripStatusLabel1.Text = "Frame number " + x++; //Update toolstrip text
             }
         }
 
@@ -167,6 +193,10 @@ namespace Netron
 
         private void setUpServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (_bw.IsBusy)
+            {
+                MessageBox.Show("A game is already running!");
+            }
             Comm = new Communicator(_gr); //Create communicator
 
 
@@ -188,8 +218,13 @@ namespace Netron
 
         private void connectToServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (_bw.IsBusy)
+            {
+                MessageBox.Show("A game is already running!");
+            }
             var scd = new ServerConnectionDialog(); //Show a new dialog
             scd.ShowDialog();
+            if (String.IsNullOrWhiteSpace(scd.Hostname)) return;
             Comm = new Communicator(_gr, scd.Hostname); //Create a communicator using the ip address
             SetupEventHandlers();
         }
@@ -206,9 +241,6 @@ namespace Netron
         private void Comm_OnInitComplete(object sender, EventArgs e)
         {
             toolStripStatusLabel1.Text = "Initialization complete"; //Write text
-           /* Player p = new Player(1) {Color = Color.BlanchedAlmond};
-            p.PutSelfInGrid(_gr, 6, 7);
-            Comm.Players.Add(p);*/
             _bw.RunWorkerAsync(); //Start the other thread
         }
 
@@ -238,6 +270,23 @@ namespace Netron
 
         private void keyUp(object sender, KeyEventArgs e)
         {
+        }
+        public void Reinitialize()
+        {
+            try
+            {
+                Comm.Disconnect();
+                _bw.CancelAsync();
+                Initialize();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Caught exception {0}", e.Message);
+            }
+        }
+        private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Reinitialize();
         }
     }
 }

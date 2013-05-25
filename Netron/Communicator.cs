@@ -34,13 +34,16 @@ namespace Netron
         Master, Slave
     }
 
-    /*        [Client]    [Client]
-     *             \      /  
-     *  [Client] - [Server] - [Client]
-     *                 \
-     *               [Client]
-     * 
-     * 
+    /*          [Client]    [Client]
+     *               ^       ^
+     *               |       |
+     *                \      /  
+     *  [Client] =>=> [Server] -> [Client]
+     *                 |    \
+     *                 V     \
+     *              [Client]  \
+     *                         \->[Client]
+     *                          
      */
 
     public class Communicator
@@ -166,7 +169,11 @@ namespace Netron
             }
             catch (IOException e) //Catch exceptions
             {
-                Debug.Print("Caught exception: {0}", e.Message);
+                Debug.Print("Caught I/O exception: {0}", e.Message);
+            }
+            catch (ObjectDisposedException e)
+            {
+                
             }
             
         }
@@ -204,6 +211,21 @@ namespace Netron
             }
             Send(GeneratePacket(MainWindow.MePlayer,TronInstruction.InitComplete,MainWindow.MePlayer.XPos,MainWindow.MePlayer.YPos)); //Send message that game is about to begin
             FireOnInitCompleteEvent(); //Fire event
+        }
+        public void Disconnect()
+        {
+            if (Tcs == TronCommunicatorStatus.Master)
+            {
+                Players.Clear();
+                _server.Stop();
+            }
+            else
+            {
+                Players.Clear();
+                _serverConnectionStream.Close();
+                _serverConnection.Close();
+            }
+
         }
         void server_OnClientDisconnect(object sender, ClientEventArgs e) //Called when player disconnects
         {

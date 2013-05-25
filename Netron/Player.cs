@@ -72,8 +72,7 @@ namespace Netron
         public bool FlushTurns() //Flush pending turns. Returns false if no turns were flushed
         {
             if (NextTurn == DirectionType.Null) return false; //no turn
-            if (NextTurn != Direction && NextTurn != (DirectionType)(((int)Direction + 180) % 360))
-                Turn(NextTurn); //turn if the direction changes
+            Turn(NextTurn); 
             NextTurn = DirectionType.Null;
             return true; //
         }
@@ -81,26 +80,29 @@ namespace Netron
         {
             //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));
             if (Dead) return;
-            NextTurn = toTurn;
-            if (broadcast)
+            if (toTurn != Direction && toTurn != (DirectionType)(((int)Direction + 180) % 360)) //turn if the direction changes
             {
-                string packet = null;
-                switch (toTurn)
+                NextTurn = toTurn;
+                if (broadcast)
                 {
-                    case DirectionType.East:
-                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnRight, XPos, YPos);
-                        break;
-                    case DirectionType.West:
-                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnLeft, XPos, YPos);
-                        break;
-                    case DirectionType.North:
-                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnUp, XPos, YPos);
-                        break;
-                    case DirectionType.South:
-                        packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnDown, XPos, YPos);
-                        break;
+                    string packet = null;
+                    switch (toTurn)
+                    {
+                        case DirectionType.East:
+                            packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnRight, XPos, YPos);
+                            break;
+                        case DirectionType.West:
+                            packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnLeft, XPos, YPos);
+                            break;
+                        case DirectionType.North:
+                            packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnUp, XPos, YPos);
+                            break;
+                        case DirectionType.South:
+                            packet = MainWindow.Comm.GeneratePacket(this, TronInstruction.TurnDown, XPos, YPos);
+                            break;
+                    }
+                    MainWindow.Comm.Send(packet);
                 }
-                MainWindow.Comm.Send(packet);
             }
         }
 #pragma warning disable 659
