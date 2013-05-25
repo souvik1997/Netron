@@ -13,6 +13,7 @@ namespace Netron
 {
     public partial class MainWindow : Form //The main window
     {
+        private const int SleepInterval = 80; //Constant amount of time to make the thread sleep
         public static Communicator Comm; //Static communicator
         private static Grid _gr; //Static grid
         public static Player MePlayer; //Static player
@@ -27,7 +28,6 @@ namespace Netron
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
 
-        private const int SleepInterval = 80; //Constant amount of time to make the thread sleep
         public MainWindow() //Constructor
         {
             InitializeComponent(); //Initialize WinForms
@@ -47,30 +47,32 @@ namespace Netron
             _gPlayers = Graphics.FromImage(_bPlayers);
         }
 
-        void _bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void _bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Reinitialize();
         }
+
         public void Initialize()
         {
             _gr.Clear();
-            MePlayer = new Player(0) { Color = Color.Magenta }; //Create player with color
+            MePlayer = new Player(0) {Color = Color.Magenta}; //Create player with color
             MePlayer.PutSelfInGrid(_gr, 2, 3); //Put player in grid
             _gMain.Clear(Color.Transparent);
             _gWall.Clear(Color.Transparent);
             _gPlayers.Clear(Color.Transparent);
         }
+
         private void bw_DoWork(object sender, DoWorkEventArgs e) //Runs in a different thread
         {
-            BackgroundWorker worker = sender as BackgroundWorker;
+            var worker = sender as BackgroundWorker;
             if (worker == null) return;
             int x = 0;
             while (!worker.CancellationPending)
             {
-                
                 if (Comm.Tcs == TronCommunicatorStatus.Server) //If this is a server
                 {
-                    Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos)); //Synchronize
+                    Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos));
+                        //Synchronize
                 }
                 Debug.WriteLine("Waiting for sync");
                 if (!Comm.SyncComplete.WaitOne(2000, false)) //Wait for acknowledgement
@@ -79,7 +81,7 @@ namespace Netron
                     {
                         string peer = Comm.Tcs == TronCommunicatorStatus.Server ? "client" : "server";
                         MessageBox.Show(
-                            "Waited for 2000 milliseconds without any response from"+ peer + ". Disconnecting...",
+                            "Waited for 2000 milliseconds without any response from " + peer + ". Disconnecting...",
                             "The " + peer + " has disconnected.");
                     }
                     break;
@@ -129,7 +131,7 @@ namespace Netron
                                          new PointF((int) Math.Round(x), (int) Math.Round(y))); //Draw image
                     }
                 }
-                
+
                 foreach (Player tb in Comm.Players) //Go through each player to draw
                 {
                     if (tb != null && tb.Image != null) //if it is not null
@@ -159,7 +161,7 @@ namespace Netron
                 }*/
                 _gMain.DrawImage(_bWall, 0, 0); //Draw buffers to main buffer
                 _gMain.DrawImage(_bPlayers, 0, 0);
-                
+
                 Walls.Clear(); //Clear list
                 RefreshGameWindow(); //Refresh
             }
@@ -169,7 +171,8 @@ namespace Netron
         {
             if (gameWindow.InvokeRequired) //If this is on a different thread
             {
-                IAsyncResult asyncRes = BeginInvoke(new MethodInvoker(RefreshGameWindow)); //Invoke the same method on the other thread
+                IAsyncResult asyncRes = BeginInvoke(new MethodInvoker(RefreshGameWindow));
+                    //Invoke the same method on the other thread
                 try
                 {
                     EndInvoke(asyncRes); //End invocation
@@ -184,7 +187,7 @@ namespace Netron
                 gameWindow.Refresh(); //Refresh if it is on the same thread
             }
         }
-        
+
         private static Bitmap resize(Bitmap src, int width, int height)
         {
             var result = new Bitmap(width, height); //Create new bitmap
@@ -213,9 +216,10 @@ namespace Netron
             Comm.OnInitTimerTick += Comm_OnInitTimerTick;
         }
 
-        void Comm_OnInitTimerTick(object sender, EventArgs e) //Called when the timer ticks
+        private void Comm_OnInitTimerTick(object sender, EventArgs e) //Called when the timer ticks
         {
-            toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left"; //Write how many seconds are left
+            toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left";
+                //Write how many seconds are left
         }
 
         private void connectToServerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -233,7 +237,8 @@ namespace Netron
             }
             catch (SocketException se)
             {
-                MessageBox.Show("SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
+                MessageBox.Show(
+                    "SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
                 Debug.Print("Caught SocketException {0}", se.Message);
                 return;
             }
@@ -246,7 +251,8 @@ namespace Netron
 
         private void Comm_OnNewPlayerConnect(object sender, EventArgs e)
         {
-            toolStripStatusLabel1.Text = "Player connected! Now " + Comm.Players.Count + " players connected"; //Write that a player has connected
+            toolStripStatusLabel1.Text = "Player connected! Now " + Comm.Players.Count + " players connected";
+                //Write that a player has connected
         }
 
         private void Comm_OnInitComplete(object sender, EventArgs e)
@@ -282,6 +288,7 @@ namespace Netron
         private void keyUp(object sender, KeyEventArgs e)
         {
         }
+
         public void Reinitialize()
         {
             try
@@ -295,6 +302,7 @@ namespace Netron
                 Console.WriteLine("Caught exception {0}", e.Message);
             }
         }
+
         private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Reinitialize();

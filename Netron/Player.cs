@@ -2,50 +2,47 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
+using Netron.Properties;
 
 namespace Netron
 {
     public class Player : TronBase //Player inherits from TronBase
     {
         public int PlayerNum //Property for player number
-        {
-            get;
-            set;
-        }
+        { get; set; }
+
         public override TronType GetTronType() //Override tron type
         {
             return TronType.Player;
         }
+
         public DirectionType NextTurn //Property for next turn
-        {
-            get;
-            set;
-        }
+        { get; set; }
+
         private readonly Bitmap _oimage; //readonly image for icon
         public override sealed Bitmap Image { get; set; } //Sealed property for the image
 
         public bool Dead //Property for if the player is dead
-        {
-            get;
-            set;
-        }
+        { get; set; }
+
         public Player(int num) //Constructor
         {
             PlayerNum = num; //store player umber
-            _oimage = Properties.Resources.TronLightcycleFinal; //Load image from resources
+            _oimage = Resources.TronLightcycleFinal; //Load image from resources
             Image = _oimage; //store image property
             NextTurn = DirectionType.Null; //set next turn to a null direction
         }
 
-        
+
         public override string Serialize() //Serialize the object
         {
-            StringBuilder sb = new StringBuilder(base.Serialize()+","); //get the superclass serialization
+            var sb = new StringBuilder(base.Serialize() + ","); //get the superclass serialization
             sb.Append(PlayerNum); //append the player number
             return sb.ToString(); //return string
         }
 
         private Color _color; //private variable for color
+
         public override Color Color //Property for color
         {
             get { return _color; } //Accessor returns color
@@ -58,29 +55,32 @@ namespace Netron
 
         public static Player Deserialize(string str) //Deserialize a string to a player
         {
-            
-            var strs = str.Split(','); //split string
-            Player p = new Player(Int32.Parse(strs[4])) //create player with player number, xpos, ypos, direction, and color
-                           {
-                               XPos = Int32.Parse(strs[0]),
-                               YPos = Int32.Parse(strs[1]),
-                               Direction = (DirectionType) Int32.Parse(strs[2]),
-                               Color = Color.FromArgb(Int32.Parse(strs[3])),
-                           };
+            string[] strs = str.Split(','); //split string
+            var p = new Player(Int32.Parse(strs[4]))
+                //create player with player number, xpos, ypos, direction, and color
+                        {
+                            XPos = Int32.Parse(strs[0]),
+                            YPos = Int32.Parse(strs[1]),
+                            Direction = (DirectionType) Int32.Parse(strs[2]),
+                            Color = Color.FromArgb(Int32.Parse(strs[3])),
+                        };
             return p; //return player
         }
+
         public bool FlushTurns() //Flush pending turns. Returns false if no turns were flushed
         {
             if (NextTurn == DirectionType.Null) return false; //no turn
-            Turn(NextTurn); 
+            Turn(NextTurn);
             NextTurn = DirectionType.Null;
             return true; //
         }
+
         public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {
             //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));
             if (Dead) return;
-            if (toTurn != Direction && toTurn != (DirectionType)(((int)Direction + 180) % 360)) //turn if the direction changes
+            if (toTurn != Direction && toTurn != (DirectionType) (((int) Direction + 180)%360))
+                //turn if the direction changes
             {
                 NextTurn = toTurn;
                 if (broadcast)
@@ -109,13 +109,14 @@ namespace Netron
         public override bool Equals(object obj)
 #pragma warning restore 659
         {
-            Player p = obj as Player;
+            var p = obj as Player;
             if (p == null) return false;
             return base.Equals(p) && p.PlayerNum == PlayerNum;
         }
+
         private bool MoveForwardIfAbleTo()
         {
-            var coords = GetAdjacentLocation(Direction, 1);
+            int[] coords = GetAdjacentLocation(Direction, 1);
             if (Grid.IsValidLocation(coords[0], coords[1]) && Grid.Get(coords[0], coords[1]) == null)
             {
                 MoveTo(coords[0], coords[1]);
@@ -125,6 +126,7 @@ namespace Netron
         }
 
         private readonly object _actLock = new object();
+
         public override void Act()
         {
             lock (_actLock)
@@ -135,7 +137,7 @@ namespace Netron
                 int oldy = YPos;
                 if (MoveForwardIfAbleTo())
                 {
-                    Wall wl = new Wall {Direction = Direction, Color = Color};
+                    var wl = new Wall {Direction = Direction, Color = Color};
                     wl.PutSelfInGrid(Grid, oldx, oldy);
                     int x = 0;
                     for (x = 0; x < MainWindow.Walls.Count; x++)
@@ -154,32 +156,36 @@ namespace Netron
                     Dead = true;
                 }
             }
-
         }
+
         private void Turn(DirectionType newDir)
         {
-
             DirectionType olddir = Direction;
             Direction = newDir;
-            if (!Grid.IsValidLocation(GetAdjacentLocation(newDir,1)) || Grid.Get(GetAdjacentLocation(newDir, 1)) != null)
+            if (!Grid.IsValidLocation(GetAdjacentLocation(newDir, 1)) ||
+                Grid.Get(GetAdjacentLocation(newDir, 1)) != null)
             {
                 Dead = true;
                 return;
             }
-            
+
             int oldx = XPos;
             int oldy = YPos;
             Debug.Print("Turning from {0} to {1}", olddir, newDir);
             MoveForwardIfAbleTo();
             Wall wl = null;
-            if ((olddir == DirectionType.North && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.South))
-                wl = (new Wall { Direction = DirectionType.Northwest, Color = Color });
-            else if ((olddir == DirectionType.North && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.South))
-                wl = (new Wall { Direction = DirectionType.Northeast, Color = Color });
-            else if ((olddir == DirectionType.South && newDir == DirectionType.East) || (olddir == DirectionType.West && newDir == DirectionType.North))
-                wl = (new Wall { Direction = DirectionType.Southwest, Color = Color });
-            else if ((olddir == DirectionType.South && newDir == DirectionType.West) || (olddir == DirectionType.East && newDir == DirectionType.North))
-                wl = (new Wall { Direction = DirectionType.Southeast, Color = Color });
+            if ((olddir == DirectionType.North && newDir == DirectionType.East) ||
+                (olddir == DirectionType.West && newDir == DirectionType.South))
+                wl = (new Wall {Direction = DirectionType.Northwest, Color = Color});
+            else if ((olddir == DirectionType.North && newDir == DirectionType.West) ||
+                     (olddir == DirectionType.East && newDir == DirectionType.South))
+                wl = (new Wall {Direction = DirectionType.Northeast, Color = Color});
+            else if ((olddir == DirectionType.South && newDir == DirectionType.East) ||
+                     (olddir == DirectionType.West && newDir == DirectionType.North))
+                wl = (new Wall {Direction = DirectionType.Southwest, Color = Color});
+            else if ((olddir == DirectionType.South && newDir == DirectionType.West) ||
+                     (olddir == DirectionType.East && newDir == DirectionType.North))
+                wl = (new Wall {Direction = DirectionType.Southeast, Color = Color});
 
             if (wl != null)
             {
