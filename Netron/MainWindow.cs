@@ -45,6 +45,7 @@ namespace Netron
             _gMain = Graphics.FromImage(gameWindow.Image); //Create graphics
             _gWall = Graphics.FromImage(_bWall);
             _gPlayers = Graphics.FromImage(_bPlayers);
+            EditVisibilityOfProgressBar(false);
         }
 
         private void _bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -61,18 +62,69 @@ namespace Netron
             _gWall.Clear(Color.Transparent);
             _gPlayers.Clear(Color.Transparent);
         }
+        private void EditText(ToolStrip ctrl, ToolStripStatusLabel label ,string text)
+        {
+            if (ctrl.InvokeRequired)
+            {
+                IAsyncResult asyncRes = BeginInvoke((Action) (() => EditText(ctrl,label,text)));
+                    //Invoke the same method on the other thread
+                try
+                {
+                    EndInvoke(asyncRes); //End invocation
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Caught exception {0}", e.Message);
+                }
+            }
+            else
+            {
+                label.Text = text; //edit if it is on the same thread
+            }
+            
+        }
+
+        private void EditVisibilityOfProgressBar(bool val)
+        {
+            if (statusStrip1.InvokeRequired)
+            {
+                IAsyncResult asyncRes = BeginInvoke((Action)(() => EditVisibilityOfProgressBar(val)));
+                //Invoke the same method on the other thread
+                try
+                {
+                    EndInvoke(asyncRes); //End invocation
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Caught exception {0}", e.Message);
+                }
+            }
+            else
+            {
+                toolStripProgressBar1.Visible = val;
+            }
+
+        }
 
         private void bw_DoWork(object sender, DoWorkEventArgs e) //Runs in a different thread
         {
             var worker = sender as BackgroundWorker;
             if (worker == null) return;
-            int x = 0;
             while (!worker.CancellationPending)
             {
+                
+                foreach (Player player in Comm.Players) //Loop through players
+                {
+                    if (!player.FlushTurns()) //Flush pending turns
+                        player.Act(); //Act if no turns were flushed
+                }
+                Draw(); //Draw everything
+
+                Thread.Sleep(SleepInterval); //sleep for an amount of time
                 if (Comm.Tcs == TronCommunicatorStatus.Server) //If this is a server
                 {
                     Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos));
-                        //Synchronize
+                    //Synchronize
                 }
                 Debug.WriteLine("Waiting for sync");
                 if (!Comm.SyncComplete.WaitOne(2000, false)) //Wait for acknowledgement
@@ -87,14 +139,6 @@ namespace Netron
                     break;
                 }
                 Debug.WriteLine("Sync complete");
-                foreach (Player player in Comm.Players) //Loop through players
-                {
-                    if (!player.FlushTurns()) //Flush pending turns
-                        player.Act(); //Act if no turns were flushed
-                }
-                Draw(); //Draw everything
-                Thread.Sleep(SleepInterval); //sleep for an amount of time
-                toolStripStatusLabel1.Text = "Frame number " + x++; //Update toolstrip text
             }
         }
 
@@ -187,7 +231,26 @@ namespace Netron
                 gameWindow.Refresh(); //Refresh if it is on the same thread
             }
         }
-
+        private void UpdateTitle()
+        {
+            if (InvokeRequired) //If this is on a different thread
+            {
+                IAsyncResult asyncRes = BeginInvoke(new MethodInvoker(UpdateTitle));
+                //Invoke the same method on the other thread
+                try
+                {
+                    EndInvoke(asyncRes); //End invocation
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Caught exception {0}", e.Message);
+                }
+            }
+            else
+            {
+                Text = "Netron - Player number "+MePlayer.PlayerNum; //Refresh if it is on the same thread
+            }
+        }
         private static Bitmap resize(Bitmap src, int width, int height)
         {
             var result = new Bitmap(width, height); //Create new bitmap
@@ -211,15 +274,16 @@ namespace Netron
         private void SetupEventHandlers()
         {
             Comm.OnInitComplete += Comm_OnInitComplete; //Set up events
-            Comm.OnNewPlayerConnect += Comm_OnNewPlayerConnect;
-            Comm.OnPlayerDisconnect += Comm_OnPlayerDisconnect;
             Comm.OnInitTimerTick += Comm_OnInitTimerTick;
+            EditVisibilityOfProgressBar(true);
         }
 
         private void Comm_OnInitTimerTick(object sender, EventArgs e) //Called when the timer ticks
         {
-            toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left";
-                //Write how many seconds are left
+            //toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left";
+            EditText(statusStrip1, toolStripStatusLabel1, string.Format("{0} seconds left",
+                                                                        (Communicator.Timeout - Comm.ElapsedTime)/1000));
+            //Write how many seconds are left
         }
 
         private void connectToServerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -245,19 +309,13 @@ namespace Netron
             SetupEventHandlers();
         }
 
-        private void Comm_OnPlayerDisconnect(object sender, EventArgs e)
-        {
-        }
 
-        private void Comm_OnNewPlayerConnect(object sender, EventArgs e)
-        {
-            toolStripStatusLabel1.Text = "Player connected! Now " + Comm.Players.Count + " players connected";
-                //Write that a player has connected
-        }
+        
 
         private void Comm_OnInitComplete(object sender, EventArgs e)
         {
-            toolStripStatusLabel1.Text = "Initialization complete"; //Write text
+            UpdateTitle();
+            EditVisibilityOfProgressBar(false);
             _bw.RunWorkerAsync(); //Start the other thread
         }
 

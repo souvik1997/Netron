@@ -78,12 +78,6 @@
     <Compile Include="ServerConnectionDialog.Designer.cs">
       <DependentUpon>ServerConnectionDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="ServerCreationDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ServerCreationDialog.Designer.cs">
-      <DependentUpon>ServerCreationDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="TronBase.cs" />
     <Compile Include="Wall.cs" />
     <EmbeddedResource Include="MainWindow.resx">

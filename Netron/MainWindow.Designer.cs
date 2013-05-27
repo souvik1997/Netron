@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.gameWindow = new System.Windows.Forms.PictureBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.connectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.connectToServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -36,24 +35,12 @@
             this.disconnectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            ((System.ComponentModel.ISupportInitialize)(this.gameWindow)).BeginInit();
+            this.gameWindow = new System.Windows.Forms.PictureBox();
+            this.toolStripProgressBar1 = new System.Windows.Forms.ToolStripProgressBar();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gameWindow)).BeginInit();
             this.SuspendLayout();
-            // 
-            // gameWindow
-            // 
-            this.gameWindow.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.gameWindow.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
-            this.gameWindow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.gameWindow.Location = new System.Drawing.Point(12, 27);
-            this.gameWindow.Name = "gameWindow";
-            this.gameWindow.Size = new System.Drawing.Size(633, 350);
-            this.gameWindow.TabIndex = 0;
-            this.gameWindow.TabStop = false;
-            this.gameWindow.Click += new System.EventHandler(this.gameWindow_Click);
             // 
             // menuStrip1
             // 
@@ -99,7 +86,8 @@
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
+            this.toolStripStatusLabel1,
+            this.toolStripProgressBar1});
             this.statusStrip1.Location = new System.Drawing.Point(0, 381);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(653, 22);
@@ -110,6 +98,26 @@
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(0, 17);
+            // 
+            // gameWindow
+            // 
+            this.gameWindow.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.gameWindow.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            this.gameWindow.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.gameWindow.Location = new System.Drawing.Point(12, 27);
+            this.gameWindow.Name = "gameWindow";
+            this.gameWindow.Size = new System.Drawing.Size(633, 350);
+            this.gameWindow.TabIndex = 0;
+            this.gameWindow.TabStop = false;
+            this.gameWindow.Click += new System.EventHandler(this.gameWindow_Click);
+            // 
+            // toolStripProgressBar1
+            // 
+            this.toolStripProgressBar1.Name = "toolStripProgressBar1";
+            this.toolStripProgressBar1.Size = new System.Drawing.Size(100, 16);
+            this.toolStripProgressBar1.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             // 
             // MainWindow
             // 
@@ -127,11 +135,11 @@
             this.SizeChanged += new System.EventHandler(this.MainWindow_SizeChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.keyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.keyUp);
-            ((System.ComponentModel.ISupportInitialize)(this.gameWindow)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gameWindow)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -139,7 +147,6 @@
 
         #endregion
 
-        private System.Windows.Forms.PictureBox gameWindow;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem connectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem connectToServerToolStripMenuItem;
@@ -147,6 +154,8 @@
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripMenuItem disconnectToolStripMenuItem;
+        private System.Windows.Forms.PictureBox gameWindow;
+        private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar1;
     }
 }
 

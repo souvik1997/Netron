@@ -36,8 +36,11 @@ namespace Netron
 
         public override string Serialize() //Serialize the object
         {
-            var sb = new StringBuilder(base.Serialize() + ","); //get the superclass serialization
+            var sb = new StringBuilder(base.Serialize()); //get the superclass serialization
+            sb.Append(",");
             sb.Append(PlayerNum); //append the player number
+            sb.Append(",");
+            sb.Append(Dead ? "1" : "0");
             return sb.ToString(); //return string
         }
 
@@ -63,6 +66,7 @@ namespace Netron
                             YPos = Int32.Parse(strs[1]),
                             Direction = (DirectionType) Int32.Parse(strs[2]),
                             Color = Color.FromArgb(Int32.Parse(strs[3])),
+                            Dead = Int32.Parse(strs[5]) == 1
                         };
             return p; //return player
         }
@@ -74,7 +78,15 @@ namespace Netron
             NextTurn = DirectionType.Null;
             return true; //
         }
-
+        public void Transform(Player p)
+        {
+            Color = p.Color;
+            Dead = p.Dead;
+            Direction = p.Direction;
+            XPos = p.XPos;
+            YPos = p.YPos;
+            PlayerNum = p.PlayerNum;
+        }
         public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {
             //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));

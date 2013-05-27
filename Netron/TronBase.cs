@@ -55,9 +55,9 @@ namespace Netron
                     {
                         Color src = b.GetPixel(x, y); //Get the color
 
-                        Color newColor = Color.FromArgb(src.A, (src.R + tintColor.R)/2, (src.G + tintColor.G)/2,
-                                                        (src.B + tintColor.B)/2); //Average source and tint colors
-
+                        Color newColor = Color.FromArgb(src.A, (int)((double)(src.R + tintColor.R)/2 * 1.2), (int)((double)(src.G + tintColor.G)/2 * 1.2),
+                                                        (int)(((double)src.B + tintColor.B)/2 * 1.2)); //Average source and tint colors
+                        
                         b2.SetPixel(x, y,
                                     newColor); //Set pixel to new color
                     }
