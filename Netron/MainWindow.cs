@@ -22,8 +22,8 @@ namespace Netron
         private readonly Bitmap _bPlayers; //Bitmap to draw players to
         private readonly Bitmap _bWall; //Bitmap to draw walls to
         private readonly BackgroundWorker _bw; //BackgroundWorker which runs in a different thread
-        private readonly float _cellHeight; //Cell height and width are constant 
-        private readonly float _cellWidth;
+        private float _cellHeight; //Cell height and width are constant 
+        private float _cellWidth;
         private readonly Graphics _gMain; //Graphics objects for each bitmap buffer
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
@@ -103,7 +103,7 @@ namespace Netron
         {
             lock (_gLock) //Lock to prevent concurrent access
             {
-                _gMain.Clear(Color.Transparent); //Clear images
+                _gMain.Clear(Color.Black); //Clear images
                 _gPlayers.Clear(Color.Transparent);
 #if DRAW_GRID //If the program should draw the grid. Useful for debugging
                 
@@ -306,6 +306,17 @@ namespace Netron
         private void disconnectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Reinitialize();
+        }
+
+        private void MainWindow_SizeChanged(object sender, EventArgs e)
+        {
+            _cellWidth = (float)gameWindow.Width / _gr.Width; //Set cell width and height
+            _cellHeight = (float)gameWindow.Height / _gr.Height;
+            lock (_gLock)
+            {
+                _gMain.Clear(Color.Transparent);
+                RefreshGameWindow();
+            }
         }
     }
 }

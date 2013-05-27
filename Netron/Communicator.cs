@@ -272,7 +272,7 @@ namespace Netron
             {
                 int color = (new Random()).Next(255*255*255); //Create random color
                 var player = new Player(Players.Count) {Color = Color.FromArgb(color)};
-                Players.Add(player); //Add player to list
+                Players.Insert(player.PlayerNum, player); //Add player to list
                 e.Client.Tag = player.PlayerNum; //Set tag for client       
                 e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum +
                                   (char) TronInstruction.InstructionEnd);
@@ -369,7 +369,10 @@ namespace Netron
                                 }
                                 if (!found)
                                 {
-                                    Players.Add(player); //Add player if it wasn't found in the list
+                                    if (player.PlayerNum >= Players.Count)
+                                        Players.Add(player); //Add player if it wasn't found in the list
+                                    else
+                                        Players.Insert(player.PlayerNum, player);
                                     Debug.Print("Adding new player: {0}", player.PlayerNum);
                                     if (player.PlayerNum == 0) Debug.WriteLine("This is the Server player");
                                 }
