@@ -89,7 +89,6 @@ namespace Netron
                     _ics = IconSets[value];
                 else
                 {
-                    Debug.WriteLine("*");
                     _ics = new IconSet
                                {
                                    WallNS = TintBitmap(_owallNS, value),

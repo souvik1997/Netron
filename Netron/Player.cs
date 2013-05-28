@@ -183,7 +183,7 @@ namespace Netron
 
             int oldx = XPos;
             int oldy = YPos;
-            Debug.Print("Turning from {0} to {1}", olddir, newDir);
+            MainWindow.Log.WriteLine(string.Format("Turning from {0} to {1}", olddir, newDir));
             MoveForwardIfAbleTo();
             Wall wl = null;
             if ((olddir == DirectionType.North && newDir == DirectionType.East) ||

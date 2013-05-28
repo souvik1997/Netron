@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Net.Sockets;
 using System.Threading;
@@ -15,6 +14,7 @@ namespace Netron
     {
         private const int SleepInterval = 80; //Constant amount of time to make the thread sleep
         public static Communicator Comm; //Static communicator
+        public static Log Log;
         private static Grid _gr; //Static grid
         public static Player MePlayer; //Static player
         private static readonly object _gLock = new object(); //Static object to lock drawing to only one thread
@@ -31,6 +31,7 @@ namespace Netron
         public MainWindow() //Constructor
         {
             InitializeComponent(); //Initialize WinForms
+            Log = new Log();
             _gr = new Grid(100, 80); //Create grid
             _bw = new BackgroundWorker {WorkerSupportsCancellation = true}; //Create background worker
             _bw.DoWork += bw_DoWork; //Set up events
@@ -74,7 +75,7 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine("Caught exception {0}", e.Message);
+                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
@@ -96,7 +97,7 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine("Caught exception {0}", e.Message);
+                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
@@ -126,7 +127,7 @@ namespace Netron
                     Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos));
                     //Synchronize
                 }
-                Debug.WriteLine("Waiting for sync");
+                Log.WriteLine("Waiting for sync");
                 if (!Comm.SyncComplete.WaitOne(2000, false)) //Wait for acknowledgement
                 {
                     if (!worker.CancellationPending)
@@ -135,10 +136,11 @@ namespace Netron
                         MessageBox.Show(
                             "Waited for 2000 milliseconds without any response from " + peer + ". Disconnecting...",
                             "The " + peer + " has disconnected.");
+                        Log.WriteLine("Disconnected because peer disconnected");
                     }
                     break;
                 }
-                Debug.WriteLine("Sync complete");
+                Log.WriteLine("Sync complete");
             }
         }
 
@@ -161,23 +163,30 @@ namespace Netron
                     }
                 }
 #endif
-                foreach (Wall tb in Walls) //Go through each wall to draw
+                //Go through each wall to draw
+// ReSharper disable ForCanBeConvertedToForeach
+                for (int i = 0; i < Walls.Count; i++ )
+// ReSharper restore ForCanBeConvertedToForeach
                 {
+                    var tb = Walls[i];
                     if (tb != null && tb.Image != null) //Draw if it is not null
                     {
-                        float x = tb.XPos*_cellWidth; //Get x and y coordinate
-                        float y = tb.YPos*_cellHeight;
+                        float x = tb.XPos * _cellWidth; //Get x and y coordinate
+                        float y = tb.YPos * _cellHeight;
 
 
-                        Bitmap icon = resize(tb.Image, (int) _cellWidth + 1, (int) _cellHeight + 1); //Resize image
+                        Bitmap icon = resize(tb.Image, (int)_cellWidth + 1, (int)_cellHeight + 1); //Resize image
                         //_gWall.FillRectangle(new SolidBrush(gameWindow.BackColor), (int)Math.Round(x)+1, (int)Math.Round(y)+1, (int)_cellWidth , (int)_cellHeight);
                         _gWall.DrawImage(icon,
-                                         new PointF((int) Math.Round(x), (int) Math.Round(y))); //Draw image
+                                         new PointF((int)Math.Round(x), (int)Math.Round(y))); //Draw image
                     }
                 }
-
-                foreach (Player tb in Comm.Players) //Go through each player to draw
+                //Go through each player to draw
+// ReSharper disable ForCanBeConvertedToForeach
+                for (int i = 0; i < Comm.Players.Count; i++)
+// ReSharper restore ForCanBeConvertedToForeach
                 {
+                    var tb = Comm.Players[i];
                     if (tb != null && tb.Image != null) //if it is not null
                     {
                         float x = tb.XPos*_cellWidth; //Get x and y coordinate
@@ -223,7 +232,7 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine("Caught exception {0}", e.Message);
+                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
@@ -243,7 +252,7 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine("Caught exception {0}", e.Message);
+                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
@@ -265,9 +274,10 @@ namespace Netron
             {
                 MessageBox.Show("A game is already running!");
             }
+            MessageBox.Show(string.Format("Possible IP addresses:\nThis computer: {0,10}\nLAN: {1,10}\nExternal IP: {2,10}",
+                                          "127.0.0.1", Communicator.GetInternalIP(), Communicator.GetExternalIP()));
+
             Comm = new Communicator(_gr); //Create communicator
-
-
             SetupEventHandlers(); //Set up events
         }
 
@@ -303,7 +313,7 @@ namespace Netron
             {
                 MessageBox.Show(
                     "SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
-                Debug.Print("Caught SocketException {0}", se.Message);
+                Log.WriteLine(string.Format("Caught SocketException {0}", se.Message));
                 return;
             }
             SetupEventHandlers();
@@ -375,6 +385,14 @@ namespace Netron
                 _gMain.Clear(Color.Transparent);
                 RefreshGameWindow();
             }
+        }
+
+        private void showHideLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Log.Visible)
+                Log.Hide();
+            else
+                Log.Show();
         }
     }
 }

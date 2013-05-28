@@ -19,7 +19,9 @@ namespace Netron
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            var frm = new MainWindow();
+            MainWindow.Log.WriteLine("Application starting");
+            Application.Run(frm);
         }
     }
 }
