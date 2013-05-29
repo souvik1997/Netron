@@ -14,7 +14,7 @@ namespace Netron
     {
         private const int SleepInterval = 80; //Constant amount of time to make the thread sleep
         public static Communicator Comm; //Static communicator
-        public static Log Log;
+
         private static Grid _gr; //Static grid
         public static Player MePlayer; //Static player
         private static readonly object _gLock = new object(); //Static object to lock drawing to only one thread
@@ -22,16 +22,17 @@ namespace Netron
         private readonly Bitmap _bPlayers; //Bitmap to draw players to
         private readonly Bitmap _bWall; //Bitmap to draw walls to
         private readonly BackgroundWorker _bw; //BackgroundWorker which runs in a different thread
-        private float _cellHeight; //Cell height and width are constant 
-        private float _cellWidth;
         private readonly Graphics _gMain; //Graphics objects for each bitmap buffer
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
-        private bool _hasWonPerm;
+        private float _cellHeight; //Cell height and width  
+        private float _cellWidth;
+        private bool _hasWonPerm; //Set if this player has won
+
         public MainWindow() //Constructor
         {
             InitializeComponent(); //Initialize WinForms
-            Log = new Log();
+            Program.Log = new Log();
             _gr = new Grid(100, 80); //Create grid
             _bw = new BackgroundWorker {WorkerSupportsCancellation = true}; //Create background worker
             _bw.DoWork += bw_DoWork; //Set up events
@@ -64,33 +65,12 @@ namespace Netron
             _gWall.Clear(Color.Transparent);
             _gPlayers.Clear(Color.Transparent);
         }
-        private void EditText(ToolStrip ctrl, ToolStripStatusLabel label ,string text)
+
+        private void EditText(ToolStrip ctrl, ToolStripStatusLabel label, string text)
         {
             if (ctrl.InvokeRequired)
             {
-                IAsyncResult asyncRes = BeginInvoke((Action) (() => EditText(ctrl,label,text)));
-                    //Invoke the same method on the other thread
-                try
-                {
-                    EndInvoke(asyncRes); //End invocation
-                }
-                catch (Exception e)
-                {
-                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
-                }
-            }
-            else
-            {
-                label.Text = text; //edit if it is on the same thread
-            }
-            
-        }
-
-        private void EditVisibilityOfProgressBar(bool val)
-        {
-            if (statusStrip1.InvokeRequired)
-            {
-                IAsyncResult asyncRes = BeginInvoke((Action)(() => EditVisibilityOfProgressBar(val)));
+                IAsyncResult asyncRes = BeginInvoke((Action) (() => EditText(ctrl, label, text)));
                 //Invoke the same method on the other thread
                 try
                 {
@@ -98,14 +78,34 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
+                    Program.Log.WriteLine(string.Format("Caught exception {0}", e.Message));
+                }
+            }
+            else
+            {
+                label.Text = text; //edit if it is on the same thread
+            }
+        }
+
+        private void EditVisibilityOfProgressBar(bool val)
+        {
+            if (statusStrip1.InvokeRequired)
+            {
+                IAsyncResult asyncRes = BeginInvoke((Action) (() => EditVisibilityOfProgressBar(val)));
+                //Invoke the same method on the other thread
+                try
+                {
+                    EndInvoke(asyncRes); //End invocation
+                }
+                catch (Exception e)
+                {
+                    Program.Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
             {
                 toolStripProgressBar1.Visible = val;
             }
-
         }
 
         private void bw_DoWork(object sender, DoWorkEventArgs e) //Runs in a different thread
@@ -114,13 +114,12 @@ namespace Netron
             if (worker == null) return;
             while (!worker.CancellationPending)
             {
-                
                 foreach (Player player in Comm.Players) //Loop through players
                 {
                     if (!player.FlushTurns()) //Flush pending turns
                         player.Act(); //Act if no turns were flushed
                 }
-                
+
                 Draw(); //Draw everything
 
                 Thread.Sleep(SleepInterval); //sleep for an amount of time
@@ -129,7 +128,7 @@ namespace Netron
                     Comm.Send(Comm.GeneratePacket(MePlayer, TronInstruction.SyncToClient, MePlayer.XPos, MePlayer.YPos));
                     //Synchronize
                 }
-                Log.WriteLine("Waiting for sync");
+                Program.Log.WriteLine("Waiting for sync");
                 if (!Comm.SyncComplete.WaitOne(2000, false)) //Wait for acknowledgement
                 {
                     if (!worker.CancellationPending)
@@ -138,11 +137,11 @@ namespace Netron
                         MessageBox.Show(
                             "Waited for 2000 milliseconds without any response from " + peer + ". Disconnecting...",
                             "The " + peer + " has disconnected.");
-                        Log.WriteLine("Disconnected because peer disconnected");
+                        Program.Log.WriteLine("Disconnected because peer disconnected");
                     }
                     break;
                 }
-                Log.WriteLine("Sync complete");
+                Program.Log.WriteLine("Sync complete");
             }
         }
 
@@ -167,20 +166,20 @@ namespace Netron
 #endif
                 //Go through each wall to draw
 // ReSharper disable ForCanBeConvertedToForeach
-                for (int i = 0; i < Walls.Count; i++ )
+                for (int i = 0; i < Walls.Count; i++)
 // ReSharper restore ForCanBeConvertedToForeach
                 {
-                    var tb = Walls[i];
+                    Wall tb = Walls[i];
                     if (tb != null && tb.Image != null) //Draw if it is not null
                     {
-                        float x = tb.XPos * _cellWidth; //Get x and y coordinate
-                        float y = tb.YPos * _cellHeight;
+                        float x = tb.XPos*_cellWidth; //Get x and y coordinate
+                        float y = tb.YPos*_cellHeight;
 
 
-                        Bitmap icon = resize(tb.Image, (int)_cellWidth + 1, (int)_cellHeight + 1); //Resize image
+                        Bitmap icon = resize(tb.Image, (int) _cellWidth + 1, (int) _cellHeight + 1); //Resize image
                         //_gWall.FillRectangle(new SolidBrush(gameWindow.BackColor), (int)Math.Round(x)+1, (int)Math.Round(y)+1, (int)_cellWidth , (int)_cellHeight);
                         _gWall.DrawImage(icon,
-                                         new PointF((int)Math.Round(x), (int)Math.Round(y))); //Draw image
+                                         new PointF((int) Math.Round(x), (int) Math.Round(y))); //Draw image
                     }
                 }
                 //Go through each player to draw
@@ -188,7 +187,7 @@ namespace Netron
                 for (int i = 0; i < Comm.Players.Count; i++)
 // ReSharper restore ForCanBeConvertedToForeach
                 {
-                    var tb = Comm.Players[i];
+                    Player tb = Comm.Players[i];
                     if (tb != null && tb.Image != null) //if it is not null
                     {
                         float x = tb.XPos*_cellWidth; //Get x and y coordinate
@@ -217,19 +216,24 @@ namespace Netron
                 _gMain.DrawImage(_bWall, 0, 0); //Draw buffers to main buffer
                 _gMain.DrawImage(_bPlayers, 0, 0);
                 bool hasWon = true;
+// ReSharper disable LoopCanBeConvertedToQuery
+// ReSharper disable ForCanBeConvertedToForeach
                 for (int x = 0; x < Comm.Players.Count; x++) //go through each player
+// ReSharper restore ForCanBeConvertedToForeach
+// ReSharper restore LoopCanBeConvertedToQuery
                 {
                     if (Comm.Players[x].PlayerNum != MePlayer.PlayerNum) //if it isn't itself
-                        hasWon &= Comm.Players[x].Dead; 
+                        hasWon &= Comm.Players[x].Dead;
                 }
                 _hasWonPerm = _hasWonPerm || (hasWon && !MePlayer.Dead);
                 if (_hasWonPerm)
                 {
-                    _gMain.DrawString("You won!", new Font("Comic Sans MS", 20), Brushes.Orange, 70, 30); //Everyone LOVES Comic Sans!
+                    _gMain.DrawString("You won!", new Font("Comic Sans MS", 20), Brushes.Orange, 70, 30);
+                        //Everyone LOVES Comic Sans!
                 }
                 else if (MePlayer.Dead)
-                   _gMain.DrawString("You died!", new Font("Comic Sans MS",20),Brushes.Orange,70,30);
-                
+                    _gMain.DrawString("You died!", new Font("Comic Sans MS", 20), Brushes.Orange, 70, 30);
+
                 Walls.Clear(); //Clear list
                 RefreshGameWindow(); //Refresh
             }
@@ -240,14 +244,14 @@ namespace Netron
             if (gameWindow.InvokeRequired) //If this is on a different thread
             {
                 IAsyncResult asyncRes = BeginInvoke(new MethodInvoker(RefreshGameWindow));
-                    //Invoke the same method on the other thread
+                //Invoke the same method on the other thread
                 try
                 {
                     EndInvoke(asyncRes); //End invocation
                 }
                 catch (Exception e)
                 {
-                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
+                    Program.Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
@@ -255,6 +259,7 @@ namespace Netron
                 gameWindow.Refresh(); //Refresh if it is on the same thread
             }
         }
+
         private void UpdateTitle() //Updates the window title to show player number
         {
             if (InvokeRequired) //If this is on a different thread
@@ -267,14 +272,15 @@ namespace Netron
                 }
                 catch (Exception e)
                 {
-                    Log.WriteLine(string.Format("Caught exception {0}", e.Message));
+                    Program.Log.WriteLine(string.Format("Caught exception {0}", e.Message));
                 }
             }
             else
             {
-                Text = "Netron - Player number "+MePlayer.PlayerNum; //Refresh if it is on the same thread
+                Text = "Netron - Player number " + MePlayer.PlayerNum; //Refresh if it is on the same thread
             }
         }
+
         private static Bitmap resize(Bitmap src, int width, int height)
         {
             var result = new Bitmap(width, height); //Create new bitmap
@@ -289,8 +295,9 @@ namespace Netron
             {
                 MessageBox.Show("A game is already running!");
             }
-            MessageBox.Show(string.Format("Possible IP addresses:\nThis computer: {0,10}\nLAN: {1,10}\nExternal IP: {2,10}",
-                                          "127.0.0.1", Communicator.GetInternalIP(), Communicator.GetExternalIP()));
+            MessageBox.Show(
+                string.Format("Possible IP addresses:\nThis computer: {0,10}\nLAN: {1,10}\nExternal IP: {2,10}",
+                              "127.0.0.1", Communicator.GetInternalIP(), Communicator.GetExternalIP()));
 
             Comm = new Communicator(_gr); //Create communicator
             SetupEventHandlers(); //Set up events
@@ -324,18 +331,17 @@ namespace Netron
             {
                 Comm = new Communicator(_gr, scd.Hostname); //Create a communicator using the ip address 
             }
-            catch (SocketException se) 
+            catch (SocketException se)
             {
                 MessageBox.Show(
-                    "SocketException occurred when connecting. Please make sure the hostname/IP address is correct"); //Show error
-                Log.WriteLine(string.Format("Caught SocketException {0}", se.Message)); //log error
+                    "SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
+                    //Show error
+                Program.Log.WriteLine(string.Format("Caught SocketException {0}", se.Message)); //log error
                 return; //exit
             }
             SetupEventHandlers();
         }
 
-
-        
 
         private void Comm_OnInitComplete(object sender, EventArgs e)
         {
@@ -382,7 +388,7 @@ namespace Netron
             }
             catch (Exception e)
             {
-                Log.WriteLine(string.Format("Caught exception {0}", e.Message));
+                Program.Log.WriteLine(string.Format("Caught exception {0}", e.Message));
             }
         }
 
@@ -393,8 +399,8 @@ namespace Netron
 
         private void MainWindow_SizeChanged(object sender, EventArgs e)
         {
-            _cellWidth = (float)gameWindow.Width / _gr.Width; //Set cell width and height
-            _cellHeight = (float)gameWindow.Height / _gr.Height;
+            _cellWidth = (float) gameWindow.Width/_gr.Width; //Set cell width and height
+            _cellHeight = (float) gameWindow.Height/_gr.Height;
             lock (_gLock)
             {
                 _gMain.Clear(Color.Transparent);
@@ -404,10 +410,10 @@ namespace Netron
 
         private void showHideLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Log.Visible)
-                Log.Hide();
+            if (Program.Log.Visible)
+                Program.Log.Hide();
             else
-                Log.Show();
+                Program.Log.Show();
         }
     }
 }

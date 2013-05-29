@@ -34,10 +34,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject />
+    <StartupObject>Netron.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>20090727_tron.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ServerFramework.NET">
@@ -142,10 +145,14 @@
   <ItemGroup>
     <None Include="Resources\WallUR.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="20090727_tron.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>chdir $(ProjectDir)$(OutDir)
+ILMerge.exe /out:Netron.merged.exe /target:winexe /targetplatform:v4 Netron.exe ServerFramework.NET.dll
+copy /Y Netron.merged.exe "$(SolutionDir)Netron.exe</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

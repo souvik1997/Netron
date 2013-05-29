@@ -1,26 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
-
-
-
 
 namespace Netron
 {
-    static class Program
+    public static class Program
     {
+        public static Log Log;
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         /// 
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            var frm = new MainWindow(); 
-            MainWindow.Log.WriteLine("Application starting");
+            var frm = new MainWindow();
+            Log.WriteLine("Application starting");
             Application.Run(frm);
         }
     }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 using Netron.Properties;
@@ -78,15 +77,7 @@ namespace Netron
             NextTurn = DirectionType.Null;
             return true; //
         }
-        public void Transform(Player p)
-        {
-            Color = p.Color;
-            Dead = p.Dead;
-            Direction = p.Direction;
-            XPos = p.XPos;
-            YPos = p.YPos;
-            PlayerNum = p.PlayerNum;
-        }
+
         public void AcceptUserInput(DirectionType toTurn, bool broadcast = true)
         {
             //Turn((DirectionType)(((int)toTurn+(int)Direction)%360));
@@ -183,7 +174,7 @@ namespace Netron
 
             int oldx = XPos;
             int oldy = YPos;
-            MainWindow.Log.WriteLine(string.Format("Turning from {0} to {1}", olddir, newDir));
+            Program.Log.WriteLine(string.Format("Turning from {0} to {1}", olddir, newDir));
             MoveForwardIfAbleTo();
             Wall wl = null;
             if ((olddir == DirectionType.North && newDir == DirectionType.East) ||

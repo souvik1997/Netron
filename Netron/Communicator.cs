@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -85,12 +84,12 @@ namespace Netron
 
             Players = new List<Player> {MainWindow.MePlayer}; //Create a new List with a collection initializer 
             Tcs = serverIP == null ? TronCommunicatorStatus.Server : TronCommunicatorStatus.Client;
-                //If Serverip is null, then it is a Client. Otherwise it is a Server
+            //If Serverip is null, then it is a Client. Otherwise it is a Server
 
             if (Tcs == TronCommunicatorStatus.Server) //If this is a Server
             {
                 _server = new Server(Port, new List<char> {(char) TronInstruction.InstructionEnd, '\n', '\r'});
-                    //Create TCP server with default line terminators
+                //Create TCP server with default line terminators
                 _server.OnClientConnect += server_OnClientConnect; //Set up events for the TCP server
                 _server.OnClientDisconnect += server_OnClientDisconnect;
                 _server.OnMessageReceived += server_OnMessageReceived;
@@ -112,7 +111,7 @@ namespace Netron
             }
             OnSyncComplete += Communicator_OnSyncComplete; //Set up additional events
             SyncComplete = new AutoResetEvent(false);
-            MainWindow.Log.WriteLine("Running as " + Tcs); //MainWindow.Logging
+            Program.Log.WriteLine("Running as " + Tcs); //MainWindow.Logging
         }
 
         public List<Player> Players //List of all players in the game
@@ -180,14 +179,14 @@ namespace Netron
                     else
                         break;
                 }
-                MainWindow.Log.WriteLine(string.Join(",",list));
+                Program.Log.WriteLine(string.Join(",", list));
                 Parse(list.ToArray()); //Parse instruction
                 _serverConnectionStream.BeginRead(new byte[0], 0, 0, ServerConnectionStreamOnRead,
                                                   _serverConnectionStream); //Restart async read
             }
             catch (IOException e) //Catch exceptions
             {
-                MainWindow.Log.WriteLine(string.Format("Caught I/O exception: {0}", e.Message));
+                Program.Log.WriteLine(string.Format("Caught I/O exception: {0}", e.Message));
             }
             catch (ObjectDisposedException)
             {
@@ -211,7 +210,7 @@ namespace Netron
         {
             _hasFinalized = true; //Set variable
             if (Players.Count == 0) return; //If there are no players to process, exit
-            MainWindow.Log.WriteLine("Finalizing connections");
+            Program.Log.WriteLine("Finalizing connections");
             int gap = _gr.Width/Players.Count; //Gap between players
             int curx = 0; //current x coordinate
 // ReSharper disable ForCanBeConvertedToForeach
@@ -220,7 +219,7 @@ namespace Netron
             {
                 Player p = Players[x]; //Get player
                 string ins = GeneratePacket(p, TronInstruction.MoveEntity, curx, _gr.Height/2);
-                    //Generate message to move player to a specific location
+                //Generate message to move player to a specific location
                 Parse(ins); //Interpret instruction
                 Send(ins); //Broadcast instruction
 
@@ -248,7 +247,7 @@ namespace Netron
                 _serverConnectionStream.Close();
                 _serverConnection.Close();
             }
-            MainWindow.Log.WriteLine
+            Program.Log.WriteLine
                 ("Disconnected!");
         }
 
@@ -259,12 +258,13 @@ namespace Netron
                 if (Players[x].PlayerNum == (int) e.Client.Tag) //if player has been found
                 {
                     Players[x].Dead = true; //Kill the player
-                    MainWindow.Log.WriteLine("Player " + x + " removed");
+                    Program.Log.WriteLine("Player " + x + " removed");
                     return;
                 }
             }
             FireOnPlayerDisconnectEvent(); //Fire event
         }
+
         public static string GetInternalIP()
         {
             string ip = null;
@@ -275,12 +275,15 @@ namespace Netron
             }
             return ip;
         }
+
         public static string GetExternalIP()
         {
             return
                 Encoding.ASCII.GetString((new WebClient()).DownloadData("http://checkip.dyndns.org/")).Replace(
-                    @"<html><head><title>Current IP Check</title></head><body>Current IP Address: ", "").Replace(@"</body></html>", "");
+                    @"<html><head><title>Current IP Check</title></head><body>Current IP Address: ", "").Replace(
+                        @"</body></html>", "");
         }
+
         private void server_OnClientConnect(object sender, ClientEventArgs e) //Fired when a player connects
         {
             if (_hasFinalized) return; //Return if game is already running
@@ -292,10 +295,10 @@ namespace Netron
                 e.Client.Tag = player.PlayerNum; //Set tag for client       
                 e.Client.SendData("" + (int) TronInstruction.ChangePlayerNum + Separator + player.PlayerNum +
                                   (char) TronInstruction.InstructionEnd);
-                    //Send message to change the player number to the next available one
+                //Send message to change the player number to the next available one
                 e.Client.SendData(GeneratePacket(player, TronInstruction.DoNothing, player.XPos, player.YPos));
-                    //Send an acknowledgement message
-                MainWindow.Log.WriteLine("Player joined!");
+                //Send an acknowledgement message
+                Program.Log.WriteLine("Player joined!");
             }
 // ReSharper disable ForCanBeConvertedToForeach
             for (int x = 0; x < Players.Count; x++) //Go through all players
@@ -303,10 +306,10 @@ namespace Netron
             {
                 Player p = Players[x];
                 string ins = GeneratePacket(p, TronInstruction.AddToGrid, p.XPos, p.YPos);
-                    //Send all players to the newly connected player
+                //Send all players to the newly connected player
                 e.Client.SendData(ins);
             }
-            MainWindow.Log.WriteLine("Connection!");
+            Program.Log.WriteLine("Connection!");
             FireOnNewPlayerConnectEvent(); //Fire event
         }
 
@@ -330,7 +333,7 @@ namespace Netron
             if (instr.Length < 2) return; //Return if instruciton is too short
             SyncComplete.Reset(); //Reset AutoResetEvent
             string str = Encoding.ASCII.GetString(instr); //Get string from bytes
-            MainWindow.Log.WriteLine(string.Format("Received {0}", str));
+            Program.Log.WriteLine(string.Format("Received {0}", str));
             string[] strs = str.Split(Separator); //Separate instruction with separator
             var whattodo = (TronInstruction) Int32.Parse(strs[0]); //Get the TronInstruction
             if (whattodo == TronInstruction.InitComplete) //if initialization is complete
@@ -340,8 +343,8 @@ namespace Netron
             else if (whattodo == TronInstruction.ChangePlayerNum) //request to change player number
             {
                 MainWindow.MePlayer.PlayerNum = Int32.Parse(strs[1]);
-                    //Get the player number from instruction and store it
-                MainWindow.Log.WriteLine("Changing player number to " + MainWindow.MePlayer.PlayerNum);
+                //Get the player number from instruction and store it
+                Program.Log.WriteLine("Changing player number to " + MainWindow.MePlayer.PlayerNum);
             }
             else if (whattodo == TronInstruction.SyncToClient)
             {
@@ -369,7 +372,7 @@ namespace Netron
                             {
                                 MainWindow.MePlayer.Color = player.Color; //Set color
                                 _gr.Exec(whattodo, xcoord, ycoord, MainWindow.MePlayer);
-                                    //perform instruction on this player
+                                //perform instruction on this player
                             }
                             else
                             {
@@ -389,13 +392,13 @@ namespace Netron
                                         Players.Add(player); //Add player if it wasn't found in the list
                                     else
                                         Players.Insert(player.PlayerNum, player);
-                                    MainWindow.Log.WriteLine(string.Format("Adding new player: {0}", player.PlayerNum));
-                                    if (player.PlayerNum == 0) MainWindow.Log.WriteLine("This is the Server player");
+                                    Program.Log.WriteLine(string.Format("Adding new player: {0}", player.PlayerNum));
+                                    if (player.PlayerNum == 0) Program.Log.WriteLine("This is the Server player");
                                 }
                                 _gr.Exec(whattodo, xcoord, ycoord, player); //Execute instruction
                                 if (Tcs == TronCommunicatorStatus.Server)
                                     Send(instr, player.PlayerNum);
-                                        //Send to all Clients, ignoring the player that sent it
+                                //Send to all Clients, ignoring the player that sent it
                             }
                         }
                         break;

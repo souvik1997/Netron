@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ServerConnectionDialog));
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
@@ -57,8 +58,10 @@
             this.ClientSize = new System.Drawing.Size(284, 74);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.textBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ServerConnectionDialog";
-            this.Text = "ServerConnectionDialog";
+            this.Text = "Connect to a server...";
             this.Load += new System.EventHandler(this.ServerConnectionDialog_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

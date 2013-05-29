@@ -1,42 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace Netron
 {
     public partial class Log : Form
     {
-        private List<string> text;
+        private readonly List<string> _text;
         
         public Log()
         {
             InitializeComponent();
-            text = new List<string>();
+            _text = new List<string>();
         }
 
         private void Log_Load(object sender, EventArgs e)
         {
-            UpdateLines(text.ToArray());
+            UpdateLines(_text.ToArray());
         }
         public void WriteLine(string str, bool debugOutput = true, bool dateStamp = true)
         {
-            if (dateStamp)
-            {
-                text.Add(string.Format("[{0}] => {1}", DateTime.Now.ToString(CultureInfo.InvariantCulture), str));
-            }
-            else
-                text.Add(str);
-            if (debugOutput)
+            _text.Add(dateStamp
+                          ? string.Format("[{0}] => {1}", DateTime.Now.ToString(CultureInfo.InvariantCulture), str)
+                          : str); //Add line to text buffer
+            if (debugOutput) //Output to console
                 Debug.WriteLine(str);
-            if (IsHandleCreated && Visible)
-                UpdateLines(text.ToArray());
+            if (IsHandleCreated && Visible) 
+                UpdateLines(_text.ToArray()); //Update form
         }
         private void UpdateLines(string[] lines)
         {
@@ -56,10 +48,6 @@ namespace Netron
             {
                 textBox1.Lines = lines;
             }
-        }
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
         }
 
         private void Log_FormClosing(object sender, FormClosingEventArgs e)
