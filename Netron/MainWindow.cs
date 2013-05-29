@@ -27,7 +27,7 @@ namespace Netron
         private readonly Graphics _gMain; //Graphics objects for each bitmap buffer
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
-
+        private bool _hasWonPerm;
         public MainWindow() //Constructor
         {
             InitializeComponent(); //Initialize WinForms
@@ -46,6 +46,7 @@ namespace Netron
             _gMain = Graphics.FromImage(gameWindow.Image); //Create graphics
             _gWall = Graphics.FromImage(_bWall);
             _gPlayers = Graphics.FromImage(_bPlayers);
+            _hasWonPerm = false;
             EditVisibilityOfProgressBar(false);
         }
 
@@ -119,6 +120,7 @@ namespace Netron
                     if (!player.FlushTurns()) //Flush pending turns
                         player.Act(); //Act if no turns were flushed
                 }
+                
                 Draw(); //Draw everything
 
                 Thread.Sleep(SleepInterval); //sleep for an amount of time
@@ -214,7 +216,20 @@ namespace Netron
                 }*/
                 _gMain.DrawImage(_bWall, 0, 0); //Draw buffers to main buffer
                 _gMain.DrawImage(_bPlayers, 0, 0);
-
+                bool hasWon = true;
+                for (int x = 0; x < Comm.Players.Count; x++) //go through each player
+                {
+                    if (Comm.Players[x].PlayerNum != MePlayer.PlayerNum) //if it isn't itself
+                        hasWon &= Comm.Players[x].Dead; 
+                }
+                _hasWonPerm = _hasWonPerm || (hasWon && !MePlayer.Dead);
+                if (_hasWonPerm)
+                {
+                    _gMain.DrawString("You won!", new Font("Comic Sans MS", 20), Brushes.Orange, 70, 30); //Everyone LOVES Comic Sans!
+                }
+                else if (MePlayer.Dead)
+                   _gMain.DrawString("You died!", new Font("Comic Sans MS",20),Brushes.Orange,70,30);
+                
                 Walls.Clear(); //Clear list
                 RefreshGameWindow(); //Refresh
             }
@@ -240,7 +255,7 @@ namespace Netron
                 gameWindow.Refresh(); //Refresh if it is on the same thread
             }
         }
-        private void UpdateTitle()
+        private void UpdateTitle() //Updates the window title to show player number
         {
             if (InvokeRequired) //If this is on a different thread
             {
@@ -304,17 +319,17 @@ namespace Netron
             }
             var scd = new ServerConnectionDialog(); //Show a new dialog
             scd.ShowDialog();
-            if (String.IsNullOrWhiteSpace(scd.Hostname)) return;
+            if (String.IsNullOrWhiteSpace(scd.Hostname)) return; //return if it is an invalid string
             try
             {
-                Comm = new Communicator(_gr, scd.Hostname); //Create a communicator using the ip address
+                Comm = new Communicator(_gr, scd.Hostname); //Create a communicator using the ip address 
             }
-            catch (SocketException se)
+            catch (SocketException se) 
             {
                 MessageBox.Show(
-                    "SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
-                Log.WriteLine(string.Format("Caught SocketException {0}", se.Message));
-                return;
+                    "SocketException occurred when connecting. Please make sure the hostname/IP address is correct"); //Show error
+                Log.WriteLine(string.Format("Caught SocketException {0}", se.Message)); //log error
+                return; //exit
             }
             SetupEventHandlers();
         }
@@ -357,17 +372,17 @@ namespace Netron
         {
         }
 
-        public void Reinitialize()
+        public void Reinitialize() //Reinitializes the game
         {
             try
             {
-                Comm.Disconnect();
+                Comm.Disconnect(); //Disconnect and stop thread
                 _bw.CancelAsync();
-                Initialize();
+                Initialize(); //Initialize variables
             }
             catch (Exception e)
             {
-                Console.WriteLine("Caught exception {0}", e.Message);
+                Log.WriteLine(string.Format("Caught exception {0}", e.Message));
             }
         }
 
