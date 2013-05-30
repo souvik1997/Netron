@@ -18,6 +18,11 @@ namespace Netron
             Application.SetCompatibleTextRenderingDefault(false);
             var frm = new MainWindow();
             Log.WriteLine("Application starting");
+#if DEBUG
+            Log.WriteLine("Debug version!");
+#else
+            Log.WriteLine("Release version!");
+#endif
             Application.Run(frm);
         }
     }
