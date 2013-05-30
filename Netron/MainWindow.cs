@@ -59,6 +59,7 @@ namespace Netron
         public void Initialize()
         {
             _gr.Clear();
+            _hasWonPerm = false;
             MePlayer = new Player(0) {Color = Color.Magenta}; //Create player with color
             MePlayer.PutSelfInGrid(_gr, 2, 3); //Put player in grid
             _gMain.Clear(Color.Transparent);
