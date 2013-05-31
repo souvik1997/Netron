@@ -39,6 +39,7 @@ namespace Netron
         TurnDown,
         SyncToClient,
         SyncToServer,
+        Kill,
         InstructionEnd = '\n'
     }
 

@@ -131,6 +131,10 @@ namespace Netron
                 case TronInstruction.TurnUp:
                     p.AcceptUserInput(TronBase.DirectionType.North, false);
                     break;
+                case TronInstruction.Kill:
+                    p.Dead = true;
+                    break;
+
             }
         }
 

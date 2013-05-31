@@ -21,8 +21,18 @@ namespace Netron
         private readonly Bitmap _oimage; //readonly image for icon
         public override sealed Bitmap Image { get; set; } //Sealed property for the image
 
+        public void Kill()
+        {
+            MainWindow.Comm.Send(MainWindow.Comm.GeneratePacket(this, TronInstruction.Kill, XPos, YPos));
+            Dead = true;
+
+        }
         public bool Dead //Property for if the player is dead
-        { get; set; }
+        {
+            get;
+            set;
+
+        }
 
         public Player(int num) //Constructor
         {
@@ -156,7 +166,7 @@ namespace Netron
                 }
                 else
                 {
-                    Dead = true;
+                    Kill();
                 }
             }
         }
@@ -168,7 +178,7 @@ namespace Netron
             if (!Grid.IsValidLocation(GetAdjacentLocation(newDir, 1)) ||
                 Grid.Get(GetAdjacentLocation(newDir, 1)) != null)
             {
-                Dead = true;
+                Kill();
                 return;
             }
 
