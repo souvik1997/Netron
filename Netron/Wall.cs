@@ -1,7 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using Netron.Properties;
+
+#endregion
 
 namespace Netron
 {
@@ -19,12 +23,12 @@ namespace Netron
     {
         public static Dictionary<Color, IconSet> IconSets = new Dictionary<Color, IconSet>();
 
-        private static readonly Bitmap _owallNS = Resources.WallNS;
-        private static readonly Bitmap _owallEW = Resources.WallEW;
-        private static readonly Bitmap _owallUR = Resources.WallUR;
-        private static readonly Bitmap _owallUL = Resources.WallUL;
-        private static readonly Bitmap _owallBL = Resources.WallBL;
-        private static readonly Bitmap _owallBR = Resources.WallBR;
+        private static Bitmap _owallNS = Resources.WallNS;
+        private static Bitmap _owallEW = Resources.WallEW;
+        private static Bitmap _owallUR = Resources.WallUR;
+        private static Bitmap _owallUL = Resources.WallUL;
+        private static Bitmap _owallBL = Resources.WallBL;
+        private static Bitmap _owallBR = Resources.WallBR;
         private Color _color;
         private IconSet _ics;
 
@@ -74,6 +78,14 @@ namespace Netron
                         obj = _ics.WallBL;
                         break;
                 }
+                if (Grid == null || obj == null)
+                {
+                    return obj;
+                }
+                if (obj.Width != (int) Grid.CellWidth + 1 || obj.Height != (int) Grid.CellHeight + 1)
+                {
+                    obj = resize(obj, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                }
                 return obj;
             }
             set { }
@@ -88,6 +100,18 @@ namespace Netron
                     _ics = IconSets[value];
                 else
                 {
+                    if (Grid != null)
+                    {
+                        if (_owallNS.Width != (int) Grid.CellWidth + 1 || _owallNS.Height != (int) Grid.CellHeight + 1)
+                        {
+                            _owallNS = resize(_owallNS, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                            _owallEW = resize(_owallEW, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                            _owallBL = resize(_owallBL, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                            _owallBR = resize(_owallBR, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                            _owallUL = resize(_owallUL, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                            _owallUR = resize(_owallUR, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                        }
+                    }
                     _ics = new IconSet
                                {
                                    WallNS = TintBitmap(_owallNS, value),
@@ -111,7 +135,7 @@ namespace Netron
 
         public static Wall Deserialize(string str)
         {
-            string[] strs = str.Split(',');
+            var strs = str.Split(',');
             var wl = new Wall
                          {
                              XPos = Int32.Parse(strs[0]),

@@ -1,5 +1,9 @@
-﻿using System.Drawing;
+﻿#region
+
+using System.Drawing;
 using System.Text;
+
+#endregion
 
 namespace Netron
 {
@@ -44,21 +48,29 @@ namespace Netron
         public abstract Color Color { get; set; } //Property for color
         private static readonly object _tintLock = new object();
 
+        protected static Bitmap resize(Bitmap src, int width, int height)
+        {
+            var result = new Bitmap(width, height); //Create new bitmap
+            using (var g = Graphics.FromImage(result)) //Using a graphics object from the image
+                g.DrawImage(src, 0, 0, width, height); //draw the image resized
+            return result; //return the bitmap
+        }
+
         protected static Bitmap TintBitmap(Bitmap b, Color tintColor) //Helper method to tint a bitmap to a color
         {
             lock (_tintLock)
             {
                 var b2 = new Bitmap(b.Width, b.Height); //Create a new bitmap
-                for (int x = 0; x < b.Width; x++) //Go through each pixel
+                for (var x = 0; x < b.Width; x++) //Go through each pixel
                 {
-                    for (int y = 0; y < b.Height; y++)
+                    for (var y = 0; y < b.Height; y++)
                     {
-                        Color src = b.GetPixel(x, y); //Get the color
+                        var src = b.GetPixel(x, y); //Get the color
 
-                        Color newColor = Color.FromArgb(src.A, (int) ((double) (src.R + tintColor.R)/2*1.2),
-                                                        (int) ((double) (src.G + tintColor.G)/2*1.2),
-                                                        (int) (((double) src.B + tintColor.B)/2*1.2));
-                            //Average source and tint colors
+                        var newColor = Color.FromArgb(src.A, (int) ((double) (src.R + tintColor.R)/2*1.2),
+                                                      (int) ((double) (src.G + tintColor.G)/2*1.2),
+                                                      (int) (((double) src.B + tintColor.B)/2*1.2));
+                        //Average source and tint colors
 
                         b2.SetPixel(x, y,
                                     newColor); //Set pixel to new color
@@ -109,8 +121,8 @@ namespace Netron
         public int[] GetAdjacentLocation(DirectionType dt, int howMuchToMove)
             //Gets the adjacent location in a direction and interval
         {
-            int proposedx = XPos; //Variables for new coordinates
-            int proposedy = YPos;
+            var proposedx = XPos; //Variables for new coordinates
+            var proposedy = YPos;
             if (dt == DirectionType.North)
             {
                 proposedy -= howMuchToMove;

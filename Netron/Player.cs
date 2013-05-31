@@ -18,8 +18,37 @@ namespace Netron
         public DirectionType NextTurn //Property for next turn
         { get; set; }
 
-        private readonly Bitmap _oimage; //readonly image for icon
-        public override sealed Bitmap Image { get; set; } //Sealed property for the image
+        private static Bitmap _oimage = Resources.TronLightcycleFinal;
+        private Bitmap _bmp;
+        public override sealed Bitmap Image 
+        { 
+            get
+            {
+                if (Grid == null)
+                {
+                    return _bmp;
+                }
+                if (_bmp.Width != (int)Grid.CellWidth + 1 || _bmp.Height != (int)Grid.CellHeight + 1)
+                {
+                    _bmp = resize(_bmp, (int)Grid.CellWidth + 1, (int)Grid.CellHeight + 1);
+                    _oimage = resize(_oimage, (int)Grid.CellWidth + 1, (int)Grid.CellHeight + 1);
+                }
+                return _bmp;
+            }
+            set
+            {
+                if (Grid == null)
+                {
+                    _bmp = value;
+                    return;
+                }
+                if (value.Width != (int)Grid.CellWidth+1 || value.Height != (int)Grid.CellHeight+1)
+                {
+                    _bmp = resize(value, (int) Grid.CellWidth + 1, (int) Grid.CellHeight + 1);
+                    _oimage = resize(_oimage, (int)Grid.CellWidth + 1, (int)Grid.CellHeight + 1);
+                }
+            }
+        } //Sealed property for the image
 
         public void Kill()
         {
@@ -37,7 +66,7 @@ namespace Netron
         public Player(int num) //Constructor
         {
             PlayerNum = num; //store player umber
-            _oimage = Resources.TronLightcycleFinal; //Load image from resources
+             //Load image from resources
             Image = _oimage; //store image property
             NextTurn = DirectionType.Null; //set next turn to a null direction
         }

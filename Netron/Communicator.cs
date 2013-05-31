@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -9,6 +11,8 @@ using System.Text;
 using System.Threading;
 using ServerFramework.NET;
 using Timer = System.Timers.Timer;
+
+#endregion
 
 namespace Netron
 {
@@ -174,7 +178,7 @@ namespace Netron
                 var list = new List<byte>(); //Create list to store data
                 while (stream.DataAvailable) //While there is data to be read
                 {
-                    int b = stream.ReadByte(); //Get the next byte
+                    var b = stream.ReadByte(); //Get the next byte
                     if (b != (byte) TronInstruction.InstructionEnd)
                         list.Add((byte) b); //Add byte to list
                     else
@@ -212,14 +216,14 @@ namespace Netron
             _hasFinalized = true; //Set variable
             if (Players.Count == 0) return; //If there are no players to process, exit
             Program.Log.WriteLine("Finalizing connections");
-            int gap = _gr.Width/Players.Count; //Gap between players
-            int curx = 0; //current x coordinate
+            var gap = _gr.Width/Players.Count; //Gap between players
+            var curx = 0; //current x coordinate
 // ReSharper disable ForCanBeConvertedToForeach
-            for (int x = 0; x < Players.Count; x++)
+            for (var x = 0; x < Players.Count; x++)
 // ReSharper restore ForCanBeConvertedToForeach
             {
-                Player p = Players[x]; //Get player
-                string ins = GeneratePacket(p, TronInstruction.MoveEntity, curx, _gr.Height/2);
+                var p = Players[x]; //Get player
+                var ins = GeneratePacket(p, TronInstruction.MoveEntity, curx, _gr.Height/2);
                 //Generate message to move player to a specific location
                 Parse(ins); //Interpret instruction
                 Send(ins); //Broadcast instruction
@@ -254,7 +258,7 @@ namespace Netron
 
         private void server_OnClientDisconnect(object sender, ClientEventArgs e) //Called when player disconnects
         {
-            for (int x = 0; x < Players.Count; x++) //Search list for player
+            for (var x = 0; x < Players.Count; x++) //Search list for player
             {
                 if (Players[x].PlayerNum == (int) e.Client.Tag) //if player has been found
                 {
@@ -269,8 +273,8 @@ namespace Netron
         public static string GetInternalIP()
         {
             string ip = null;
-            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (IPAddress i in host.AddressList.Where(i => i.AddressFamily == AddressFamily.InterNetwork))
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var i in host.AddressList.Where(i => i.AddressFamily == AddressFamily.InterNetwork))
             {
                 ip = i.ToString();
             }
@@ -290,7 +294,7 @@ namespace Netron
             if (_hasFinalized) return; //Return if game is already running
             if (Tcs == TronCommunicatorStatus.Server) //If this is a Server
             {
-                int color = (new Random()).Next(255*255*255); //Create random color
+                var color = (new Random()).Next(255*255*255); //Create random color
                 var player = new Player(Players.Count) {Color = Color.FromArgb(color)};
                 Players.Insert(player.PlayerNum, player); //Add player to list
                 e.Client.Tag = player.PlayerNum; //Set tag for client       
@@ -302,11 +306,11 @@ namespace Netron
                 Program.Log.WriteLine("Player joined!");
             }
 // ReSharper disable ForCanBeConvertedToForeach
-            for (int x = 0; x < Players.Count; x++) //Go through all players
+            for (var x = 0; x < Players.Count; x++) //Go through all players
 // ReSharper restore ForCanBeConvertedToForeach
             {
-                Player p = Players[x];
-                string ins = GeneratePacket(p, TronInstruction.AddToGrid, p.XPos, p.YPos);
+                var p = Players[x];
+                var ins = GeneratePacket(p, TronInstruction.AddToGrid, p.XPos, p.YPos);
                 //Send all players to the newly connected player
                 e.Client.SendData(ins);
             }
@@ -333,9 +337,9 @@ namespace Netron
         {
             if (instr.Length < 2) return; //Return if instruciton is too short
             SyncComplete.Reset(); //Reset AutoResetEvent
-            string str = Encoding.ASCII.GetString(instr); //Get string from bytes
+            var str = Encoding.ASCII.GetString(instr); //Get string from bytes
             Program.Log.WriteLine(string.Format("Received {0}", str));
-            string[] strs = str.Split(Separator); //Separate instruction with separator
+            var strs = str.Split(Separator); //Separate instruction with separator
             var whattodo = (TronInstruction) Int32.Parse(strs[0]); //Get the TronInstruction
             if (whattodo == TronInstruction.InitComplete) //if initialization is complete
             {
@@ -360,14 +364,14 @@ namespace Netron
             }
             else
             {
-                int xcoord = Int32.Parse(strs[1]); //Get xcoord and ycoord from arg1 and arg2
-                int ycoord = Int32.Parse(strs[2]);
+                var xcoord = Int32.Parse(strs[1]); //Get xcoord and ycoord from arg1 and arg2
+                var ycoord = Int32.Parse(strs[2]);
                 var type = (TronType) Int32.Parse(strs[3]); //Get TronType (Player or wall)
                 switch (type)
                 {
                     case TronType.Player:
                         {
-                            Player player = Player.Deserialize(strs[4]); //Deserialize from data
+                            var player = Player.Deserialize(strs[4]); //Deserialize from data
 
                             if (player.PlayerNum == MainWindow.MePlayer.PlayerNum)
                             {
@@ -377,8 +381,8 @@ namespace Netron
                             }
                             else
                             {
-                                bool found = false; //Search through player list
-                                for (int x = 0; x < Players.Count; x++)
+                                var found = false; //Search through player list
+                                for (var x = 0; x < Players.Count; x++)
                                 {
                                     if (Players[x].PlayerNum == player.PlayerNum)
                                     {
@@ -405,7 +409,7 @@ namespace Netron
                         break;
                     case TronType.Wall:
                         {
-                            Wall wall = Wall.Deserialize(strs[4]); //Deserialize wall
+                            var wall = Wall.Deserialize(strs[4]); //Deserialize wall
                             _gr.Exec(whattodo, xcoord, ycoord, wall); //Execute instruction
                         }
                         break;
@@ -429,7 +433,7 @@ namespace Netron
                     }
                     break;
                 case TronCommunicatorStatus.Server: //if this is a Server
-                    foreach (Client c in _server.ConnectedClients) //go through all players
+                    foreach (var c in _server.ConnectedClients) //go through all players
                     {
                         if ((int) c.Tag != ignore) //ignore certain players
                             c.SendData(buf); //send data

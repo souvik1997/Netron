@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿#region
+
+using System.Collections.Generic;
+
+#endregion
 
 namespace Netron
 {
@@ -22,6 +26,9 @@ namespace Netron
             get { return Map.GetLength(0); }
         }
 
+        public float CellHeight { get; set; } //Cell height and width  
+        public float CellWidth { get; set; }
+
         public void Set(TronBase tb, int x, int y) //Sets a location to a TronBase
         {
             if (Get(x, y) != null) //If there is already an object there
@@ -31,7 +38,7 @@ namespace Netron
 
         public TronBase Remove(int x, int y) //Removes something from the array
         {
-            TronBase tb = Get(x, y); //Get the object there
+            var tb = Get(x, y); //Get the object there
             if (tb != null) //If there is already an object there
                 tb.IsInGrid = false; //Update
             Set(null, x, y); //Set to null
@@ -65,7 +72,7 @@ namespace Netron
 
         public void ActAll() //Make all the tronbases act
         {
-            foreach (TronBase tb in Map) //Foreach loop
+            foreach (var tb in Map) //Foreach loop
             {
                 if (tb != null)
                     tb.Act(); //Act if not null
@@ -75,13 +82,13 @@ namespace Netron
         public List<TronBase> GetAllNeighboring(int xCoord, int yCoord) //Get all tronbases neighboring a location
         {
             var list = new List<TronBase>(); //Create list
-            for (int x = xCoord - 1; x < xCoord + 1; x++) //go through a 3x3 grid around the coordinate
+            for (var x = xCoord - 1; x < xCoord + 1; x++) //go through a 3x3 grid around the coordinate
             {
-                for (int y = yCoord - 1; y < yCoord + 1; y++)
+                for (var y = yCoord - 1; y < yCoord + 1; y++)
                 {
                     if (IsValidLocation(x, y)) //if location is valid
                     {
-                        TronBase tb = Get(x, y); //get the object
+                        var tb = Get(x, y); //get the object
                         if (y != yCoord || x != xCoord && tb != null)
                             list.Add(tb); //Add the object
                     }
@@ -134,7 +141,6 @@ namespace Netron
                 case TronInstruction.Kill:
                     p.Dead = true;
                     break;
-
             }
         }
 

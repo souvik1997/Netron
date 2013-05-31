@@ -1,15 +1,19 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms;
+
+#endregion
 
 namespace Netron
 {
     public partial class Log : Form
     {
         private readonly List<string> _text;
-        
+
         public Log()
         {
             InitializeComponent();
@@ -20,6 +24,7 @@ namespace Netron
         {
             UpdateLines(_text.ToArray());
         }
+
         public void WriteLine(string str, bool debugOutput = true, bool dateStamp = true)
         {
             _text.Add(dateStamp
@@ -27,9 +32,10 @@ namespace Netron
                           : str); //Add line to text buffer
             if (debugOutput) //Output to console
                 Debug.WriteLine(str);
-            if (IsHandleCreated && Visible) 
+            if (IsHandleCreated && Visible)
                 UpdateLines(_text.ToArray()); //Update form
         }
+
         private void UpdateLines(string[] lines)
         {
             if (textBox1.InvokeRequired)

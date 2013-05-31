@@ -1,4 +1,4 @@
-﻿//#define DRAW_GRID //Preprocessor statement
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -7,6 +7,8 @@ using System.Drawing;
 using System.Net.Sockets;
 using System.Threading;
 using System.Windows.Forms;
+
+#endregion
 
 namespace Netron
 {
@@ -25,8 +27,7 @@ namespace Netron
         private readonly Graphics _gMain; //Graphics objects for each bitmap buffer
         private readonly Graphics _gPlayers;
         private readonly Graphics _gWall;
-        private float _cellHeight; //Cell height and width  
-        private float _cellWidth;
+
         private bool _hasWonPerm; //Set if this player has won
 
         public MainWindow() //Constructor
@@ -39,8 +40,8 @@ namespace Netron
             _bw.RunWorkerCompleted += _bw_RunWorkerCompleted;
             MePlayer = new Player(0) {Color = Color.Magenta}; //Create player with color
             MePlayer.PutSelfInGrid(_gr, 2, 3); //Put player in grid
-            _cellWidth = (float) gameWindow.Width/_gr.Width; //Set cell width and height
-            _cellHeight = (float) gameWindow.Height/_gr.Height;
+            _gr.CellWidth = (float) gameWindow.Width/_gr.Width; //Set cell width and height
+            _gr.CellHeight = (float) gameWindow.Height/_gr.Height;
             gameWindow.Image = new Bitmap(gameWindow.Width, gameWindow.Height); //Create bitmaps
             _bWall = new Bitmap(gameWindow.Width, gameWindow.Height);
             _bPlayers = new Bitmap(gameWindow.Width, gameWindow.Height);
@@ -71,7 +72,7 @@ namespace Netron
         {
             if (ctrl.InvokeRequired)
             {
-                IAsyncResult asyncRes = BeginInvoke((Action) (() => EditText(ctrl, label, text)));
+                var asyncRes = BeginInvoke((Action) (() => EditText(ctrl, label, text)));
                 //Invoke the same method on the other thread
                 try
                 {
@@ -92,7 +93,7 @@ namespace Netron
         {
             if (statusStrip1.InvokeRequired)
             {
-                IAsyncResult asyncRes = BeginInvoke((Action) (() => EditVisibilityOfProgressBar(val)));
+                var asyncRes = BeginInvoke((Action) (() => EditVisibilityOfProgressBar(val)));
                 //Invoke the same method on the other thread
                 try
                 {
@@ -115,7 +116,7 @@ namespace Netron
             if (worker == null) return;
             while (!worker.CancellationPending)
             {
-                foreach (Player player in Comm.Players) //Loop through players
+                foreach (var player in Comm.Players) //Loop through players
                 {
                     if (!player.FlushTurns()) //Flush pending turns
                         player.Act(); //Act if no turns were flushed
@@ -134,7 +135,7 @@ namespace Netron
                 {
                     if (!worker.CancellationPending)
                     {
-                        string peer = Comm.Tcs == TronCommunicatorStatus.Server ? "client" : "server";
+                        var peer = Comm.Tcs == TronCommunicatorStatus.Server ? "client" : "server";
                         MessageBox.Show(
                             "Waited for 2000 milliseconds without any response from " + peer + ". Disconnecting...",
                             "The " + peer + " has disconnected.");
@@ -155,71 +156,50 @@ namespace Netron
                 _gPlayers.Clear(Color.Transparent);
 #if DRAW_GRID //If the program should draw the grid. Useful for debugging
                 
-                for (float testx = 0; testx < _cellWidth*_gr.Width; testx += _cellWidth) //Double for loop to go through each cell
+                for (float testx = 0; testx < _gr.CellWidth*_gr.Width; testx += _gr.CellWidth) //Double for loop to go through each cell
                 {
                     
-                    for (float testy = 0; testy < _cellHeight*_gr.Height; testy += _cellHeight)
+                    for (float testy = 0; testy < _gr.CellHeight*_gr.Height; testy += _gr.CellHeight)
                     {
-                        _gMain.DrawRectangle(new Pen(Brushes.DimGray), testx, testy, testx + _cellWidth,
-                                        testy + _cellHeight); //Draw rectangles in each cell
+                        _gMain.DrawRectangle(new Pen(Brushes.DimGray), testx, testy, testx + _gr.CellWidth,
+                                        testy + _gr.CellHeight); //Draw rectangles in each cell
                     }
                 }
 #endif
                 //Go through each wall to draw
 // ReSharper disable ForCanBeConvertedToForeach
-                for (int i = 0; i < Walls.Count; i++)
+                for (var i = 0; i < Walls.Count; i++)
 // ReSharper restore ForCanBeConvertedToForeach
                 {
-                    Wall tb = Walls[i];
-                    if (tb != null && tb.Image != null) //Draw if it is not null
-                    {
-                        float x = tb.XPos*_cellWidth; //Get x and y coordinate
-                        float y = tb.YPos*_cellHeight;
+                    var tb = Walls[i];
+                    if (tb == null || tb.Image == null) continue;
+                    var x = tb.XPos*_gr.CellWidth; //Get x and y coordinate
+                    var y = tb.YPos*_gr.CellHeight;
 
 
-                        Bitmap icon = resize(tb.Image, (int) _cellWidth + 1, (int) _cellHeight + 1); //Resize image
-                        //_gWall.FillRectangle(new SolidBrush(gameWindow.BackColor), (int)Math.Round(x)+1, (int)Math.Round(y)+1, (int)_cellWidth , (int)_cellHeight);
-                        _gWall.DrawImage(icon,
-                                         new PointF((int) Math.Round(x), (int) Math.Round(y))); //Draw image
-                    }
+                    _gWall.DrawImage(tb.Image,
+                                     new PointF((int) Math.Round(x), (int) Math.Round(y))); //Draw image
                 }
                 //Go through each player to draw
 // ReSharper disable ForCanBeConvertedToForeach
-                for (int i = 0; i < Comm.Players.Count; i++)
+                for (var i = 0; i < Comm.Players.Count; i++)
 // ReSharper restore ForCanBeConvertedToForeach
                 {
-                    Player tb = Comm.Players[i];
-                    if (tb != null && tb.Image != null) //if it is not null
-                    {
-                        float x = tb.XPos*_cellWidth; //Get x and y coordinate
-                        float y = tb.YPos*_cellHeight;
+                    var tb = Comm.Players[i];
+                    if (tb == null || tb.Image == null) continue;
+                    var x = tb.XPos*_gr.CellWidth; //Get x and y coordinate
+                    var y = tb.YPos*_gr.CellHeight;
 
 
-                        Bitmap icon = resize(tb.Image, (int) _cellWidth + 1, (int) _cellHeight + 1); //Resize
-                        _gPlayers.DrawImage(icon, //Draw image
-                                            new PointF((int) Math.Round(x), (int) Math.Round(y)));
-                    }
+                    _gPlayers.DrawImage(tb.Image, //Draw image
+                                        new PointF((int) Math.Round(x), (int) Math.Round(y)));
                 }
-                /*foreach(TronBase tb in _gr.Map)
-                {
-                    if (tb != null && tb.Image != null)
-                    {
-                        float x = tb.XPos * _cellWidth;
-                        float y = tb.YPos * _cellHeight;
-
-
-                        Bitmap icon = resize(tb.Image, (int)_cellWidth + 1, (int)_cellHeight + 1);
-                        _gPlayers.DrawImage(icon,
-                                            new PointF((int)Math.Round(x), (int)Math.Round(y)));
-                    }
-
-                }*/
                 _gMain.DrawImage(_bWall, 0, 0); //Draw buffers to main buffer
                 _gMain.DrawImage(_bPlayers, 0, 0);
-                bool hasWon = true;
+                var hasWon = true;
 // ReSharper disable LoopCanBeConvertedToQuery
 // ReSharper disable ForCanBeConvertedToForeach
-                for (int x = 0; x < Comm.Players.Count; x++) //go through each player
+                for (var x = 0; x < Comm.Players.Count; x++) //go through each player
 // ReSharper restore ForCanBeConvertedToForeach
 // ReSharper restore LoopCanBeConvertedToQuery
                 {
@@ -230,7 +210,7 @@ namespace Netron
                 if (_hasWonPerm)
                 {
                     _gMain.DrawString("You won!", new Font("Comic Sans MS", 20), Brushes.Orange, 70, 30);
-                        //Everyone LOVES Comic Sans!
+                    //Everyone LOVES Comic Sans!
                 }
                 else if (MePlayer.Dead)
                     _gMain.DrawString("You died!", new Font("Comic Sans MS", 20), Brushes.Orange, 70, 30);
@@ -244,7 +224,7 @@ namespace Netron
         {
             if (gameWindow.InvokeRequired) //If this is on a different thread
             {
-                IAsyncResult asyncRes = BeginInvoke(new MethodInvoker(RefreshGameWindow));
+                var asyncRes = BeginInvoke(new MethodInvoker(RefreshGameWindow));
                 //Invoke the same method on the other thread
                 try
                 {
@@ -265,7 +245,7 @@ namespace Netron
         {
             if (InvokeRequired) //If this is on a different thread
             {
-                IAsyncResult asyncRes = BeginInvoke(new MethodInvoker(UpdateTitle));
+                var asyncRes = BeginInvoke(new MethodInvoker(UpdateTitle));
                 //Invoke the same method on the other thread
                 try
                 {
@@ -282,13 +262,6 @@ namespace Netron
             }
         }
 
-        private static Bitmap resize(Bitmap src, int width, int height)
-        {
-            var result = new Bitmap(width, height); //Create new bitmap
-            using (Graphics g = Graphics.FromImage(result)) //Using a graphics object from the image
-                g.DrawImage(src, 0, 0, width, height); //draw the image resized
-            return result; //return the bitmap
-        }
 
         private void setUpServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -313,7 +286,6 @@ namespace Netron
 
         private void Comm_OnInitTimerTick(object sender, EventArgs e) //Called when the timer ticks
         {
-            //toolStripStatusLabel1.Text = "" + (Communicator.Timeout - Comm.ElapsedTime)/1000 + " seconds left";
             EditText(statusStrip1, toolStripStatusLabel1, string.Format("{0} seconds left",
                                                                         (Communicator.Timeout - Comm.ElapsedTime)/1000));
             //Write how many seconds are left
@@ -336,7 +308,7 @@ namespace Netron
             {
                 MessageBox.Show(
                     "SocketException occurred when connecting. Please make sure the hostname/IP address is correct");
-                    //Show error
+                //Show error
                 Program.Log.WriteLine(string.Format("Caught SocketException {0}", se.Message)); //log error
                 return; //exit
             }
@@ -357,21 +329,20 @@ namespace Netron
 
         private void keyDown(object sender, KeyEventArgs e) //Fired when a key is pressed
         {
-            if (e.KeyCode == Keys.A) //if key is A
+            switch (e.KeyCode)
             {
-                MePlayer.AcceptUserInput(TronBase.DirectionType.West); //go left
-            }
-            else if (e.KeyCode == Keys.D) //if key is D
-            {
-                MePlayer.AcceptUserInput(TronBase.DirectionType.East); //go right
-            }
-            else if (e.KeyCode == Keys.S) //if key is S
-            {
-                MePlayer.AcceptUserInput(TronBase.DirectionType.South); //go down
-            }
-            else if (e.KeyCode == Keys.W) //if key is W
-            {
-                MePlayer.AcceptUserInput(TronBase.DirectionType.North); //go up
+                case Keys.A:
+                    MePlayer.AcceptUserInput(TronBase.DirectionType.West); //go left
+                    break;
+                case Keys.D:
+                    MePlayer.AcceptUserInput(TronBase.DirectionType.East); //go right
+                    break;
+                case Keys.S:
+                    MePlayer.AcceptUserInput(TronBase.DirectionType.South); //go down
+                    break;
+                case Keys.W:
+                    MePlayer.AcceptUserInput(TronBase.DirectionType.North); //go up
+                    break;
             }
         }
 
@@ -400,8 +371,8 @@ namespace Netron
 
         private void MainWindow_SizeChanged(object sender, EventArgs e)
         {
-            _cellWidth = (float) gameWindow.Width/_gr.Width; //Set cell width and height
-            _cellHeight = (float) gameWindow.Height/_gr.Height;
+            _gr.CellWidth = (float) gameWindow.Width/_gr.Width; //Set cell width and height
+            _gr.CellHeight = (float) gameWindow.Height/_gr.Height;
             lock (_gLock)
             {
                 _gMain.Clear(Color.Transparent);
